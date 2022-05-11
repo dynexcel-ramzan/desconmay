@@ -1,0 +1,211 @@
+<odoo>
+    <template id="bank_letter_report">
+        <t t-call="web.html_container">
+                <t t-foreach="docs" t-as="o">
+                    <div class="article o_report_layout_standard" t-att-data-oe-model="o and o._name" t-att-data-oe-id="o and o.id">
+                        <t t-call="de_bank_report.pdf_report_layout"/>No properties to inspect.
+                        <div class="page">
+                            <p1>
+                                Bank Manager
+                                <br/>
+                                 <t t-foreach="o.branch" t-as="batch">
+<!--                                     <t t-foreach="request.env['hr.payslip'].search([('payslip_run_id','=',batch.id)], limite=1)" t-as="payslips">
+                                           <t t-foreach="payslips" t-as="payslip">
+                                             <td><t t-esc='payslip.employee_id.bank_account_id.bank_id.name'/></td>
+                                               <br/>
+                                               <td><t t-esc='payslip.employee_id.bank_account_id.bank_id.street'/></td>
+                                        </t>
+                                     </t> -->
+                                </t>
+                                <br/>
+                              
+                                 
+                            </p1>
+                            <br/>
+                            <div  style="font-weight: bold;">
+                            <p2 style="border-bottom: 1px solid black;">Subject: Distursement  of  <t t-foreach="o.bank" t-as="ecc">
+                                <span t-field="ecc.company_id.name"/> 
+                                </t> Employess  Salaries  for  the  Month  of    <span t-esc="context_timestamp(datetime.datetime.now()).strftime('%b,%Y')"/>
+                            </p2>
+                            </div>
+                            <br/>
+                            <br/>
+                            <t t-set='grand_tot_net_wage' t-value='0'/>
+                            <t t-foreach="o.branch" t-as="batch">
+                              <t t-foreach="request.env['hr.payslip'].search([('payslip_run_id','=',batch.id)])" t-as="payslips">
+                               <t t-foreach="payslips" t-as="payslip">
+                                <t t-if='payslip.employee_id.bank_account_id.bank_id.name == "Bank Alfalah Limited"'>
+                              
+                                   <t t-set='grand_tot_net_wage' t-value='grand_tot_net_wage + payslip.net_wage'/>
+                                   </t>
+                                  </t>
+                                </t>
+                            </t>
+                             <t t-set='amount_words' t-value='0'/>
+                            <t t-foreach="o.branch" t-as="batch">
+                              <t t-foreach="request.env['hr.payslip'].search([('payslip_run_id','=',batch.id)])" t-as="payslips">
+                               <t t-foreach="payslips" t-as="payslip">
+                               <t t-set="amount_words" t-value="payslip.company_id.currency_id.amount_to_text(grand_tot_net_wage)">
+                            </t>
+                                  </t>
+                                </t>
+                            </t>
+                            
+                            
+                            
+                            
+                            <p3>
+                                Dear  sir,
+                                with  refrence  to  captioned  subject  you  are  requested  to  disburse  the  amount  PKR <t t-esc='grand_tot_net_wage' t-options="{'widget': 'monetary', 'display_currency': env.company.currency_id}"/>-(<t t-esc='amount_words'/>)from  Descon  Corporation  Pvt  Ltd Account  against cheque# <span t-field="o.cheque_no"/>which  details  are  mentioned  below  against  the  salary  sheet (attached)  against  respective  employee  maintaining  account  in  same  branch
+                                <br/>
+                                <br/>
+                                <br/>
+                                <br/>  
+                            </p3>
+                            <div  style="font-weight: bold;"> 
+                                <t t-foreach="o.bank" t-as="ecc">
+                                <span t-field="ecc.company_id.name"/> 
+                                </t>
+                            <br/>
+                                <t t-foreach="o.bank" t-as="ecc">
+                                <span t-field="ecc.bank_account_id.acc_number"/> 
+                            </t>
+                                    <br/>
+                               <t t-foreach="o.bank" t-as="ecc">
+                                <span t-field="ecc.bank_account_id.bank_id.street"/> 
+                            </t>
+                            </div>
+                            <br/>
+                            <br/>
+                            <br/>
+                            <br/>
+                            <br/>
+                            <br/>
+                            <br/>
+                <div class="row">
+                             <div class="col-4" >
+                                 <table>
+                                     <tbody>
+                                         <tr style="font-weight: bold;">
+                                             <td style="border-bottom: 1px solid black;">Approving Authority</td>
+                                         </tr>
+                                     </tbody>
+                                 </table>
+                             </div>
+                     <div class="col-4" >
+                                 <table>
+                                     <tbody>
+                                         <tr >
+                                             <td ></td>
+                                         </tr>
+                                     </tbody>
+                                 </table>
+                             </div>
+                     <div class="col-4" >
+                                 <table>
+                                     <tbody>
+                                         <tr style="font-weight: bold;">
+                                             <td style="border-bottom: 1px solid black;">Approving Authority</td>
+                                         </tr>
+                                     </tbody>
+                                 </table>
+                             </div>          
+                        </div>
+          
+                        <p style="page-break-after:always"></p>  
+                        </div>
+                     
+                        <div style="font-size:18x"><p3 style="font-size:20x">Salary  Transfer  <span t-esc="context_timestamp(datetime.datetime.now()).strftime('%B,%Y')"/></p3></div>
+                      
+                       <br/>
+                         <div class="row">
+                             <div class="col-6" >
+                                 <table width="400">
+                                     <tbody>
+                                         <tr style="font-weight: bold;">
+                                             <td >Sr#</td>
+                                             <td >Bank Account</td>
+                                            <td >Account</td>
+                                         </tr>
+<!--                                                
+                                         Bank Account fore each loap -->
+                            
+                                         <t t-set='sr_no' t-value='0'/>
+                                         <t t-set='tot_net_wage' t-value='0'/>
+                                         <t t-foreach="o.branch" t-as="batch">
+                                          <t t-foreach="request.env['hr.payslip'].search([('payslip_run_id','=',batch.id)])" t-as="payslips">
+                                           <t t-foreach="payslips" t-as="payslip">
+                                           <t t-set='sr_no' t-value='sr_no + 1'/>
+                                            <t t-if='payslip.employee_id.bank_account_id.bank_id.name == "Bank Alfalah Limited"'>
+                                               
+                                               
+                                           <tr>
+                                               <td><t t-esc='sr_no'/></td>
+                                               <td><t t-esc='payslip.employee_id.bank_account_id.acc_number'/> </td>
+                                               <td> <t t-esc='payslip.net_wage'/></td>
+                                               <t t-set='tot_net_wage' t-value='tot_net_wage + payslip.net_wage'/>
+                                           </tr>
+                                               <tr>
+                                            <tr style="font-weight: bold;">
+                                             <td  ></td>
+                                             <td  ></td>
+                                             <td  ><t t-esc="payslip.net_wage"/></td>
+                                         </tr>  
+                                               </tr>
+                                           </t>
+                                              </t>
+                            
+                                         </t>  
+                                         </t>
+                                     
+                                   
+                                  </tbody>
+                                 </table>
+                             </div>
+                        </div>
+                        <br/>
+                        <br/>
+                        <br/>
+                        <div class="row">
+                             <div class="col-6" >
+                                 <table >
+                                     <tbody >
+                                         <tr style="font-weight: bold;">
+                                             <td  style="border-bottom: 1px solid black;">Approving Authority</td>
+                                         </tr>
+                                          </tbody>
+                                 </table>
+                             </div>          
+                        </div>
+                        <br/>
+                        <br/>
+                        <br/>
+                        <br/>
+                        
+                         <div class="row">
+                             <div class="col-6" >
+                                 <table>
+                                     <tbody >
+                                         <tr style="font-weight: bold;">
+                                             <td  style="border-bottom: 1px solid black;">Approving Authority</td>
+                                         </tr>
+                                          </tbody>
+                                 </table>
+                             </div>          
+                        </div>
+                          <p style="page-break-after:always"></p> 
+                          
+                    </div>
+            </t>
+            </t>
+       
+    </template>
+
+    <report
+            id="bank_report_data"
+            string="Bank letters (PDF)"
+            model="banks.model"
+            report_type="qweb-pdf"
+            file="de_bank_report.bank_letter_report"
+            name="de_bank_report.bank_letter_report"/>
+</odoo>

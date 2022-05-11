@@ -1,0 +1,86 @@
+<odoo>
+    
+   <template id="eobi_report">
+    <t t-call="web.html_container">
+    <t t-call="web.external_layout">
+        <t t-set="company" t-value="docs.company_id"/> 
+        <div class="page">
+            <div class="oe_structure"/>
+            <div  style="position:relative;align:center;">
+               <h3>Employee's Old Age Benefits Institution</h3> <br/>
+               <h5>Government of Pakistan, Ministry of Labour, Manpower & Overseas Pakistanis (Labour Division).</h5>
+            </div>
+            <div  style="margin-left: 800px; max-width: 250px;height: 20px;">
+               <strong>Printed On:</strong>
+               <span  t-esc="datetime.datetime.strptime(str(datetime.datetime.now()+ relativedelta(hours =+ 5)), '%Y-%m-%d %H:%M:%S.%f').strftime('%d-%b-%y %H:%M %p')"/>
+                <strong>Printed By:</strong>
+               <span  t-esc="user.name"/>
+            </div>
+            <div  style="position: relative; max-width: 400px;">
+               <strong>E.O.B.I Contribution Detail</strong> <br/>
+            </div>
+            
+            
+            <br/>
+            <table class="table table-sm table-striped table-bordered">
+		
+                <thead>
+                    <tr>
+                        <th>Sr No.</th>
+                        <th>EOBI Registration No.</th>
+                        <th>CNIC No.</th>
+                        <th>Name of Insured Person</th>
+                        <th>Father/Husband Name</th>
+                        <th>Gender</th>
+                        <th>Date of Birth</th>
+                        <th>EOBI Reg. Date</th>
+                        <th>Date of Exit</th>
+                        <th>Payable Days</th>
+                        <th>EOBI Amount</th>
+                        <th>
+                            Contributions
+                            <table>
+                                <tr>
+                                    <th>Employee</th>
+                                    <th>Employer</th>
+                                </tr>
+                            </table>
+                        </th>
+                        <th>Total Cont.</th>
+                    </tr>
+                </thead>
+                       
+                <tbody class="eobi_tbody">
+                    <t t-set='sr_no' t-value='0' />
+                    <t t-foreach="employee_attendance['attendances']" t-as="attendance">
+                            <t t-set='sr_no' t-value='sr_no + 1' />
+                            <tr>
+                                <td> 
+                                    <span t-esc='sr_no'/> 
+                                </td>
+                                <td><span t-esc='sr_no'/> </td>
+                                <td><span t-esc='sr_no'/> </td>
+                                <td><span t-esc='sr_no'/> </td>
+                                <td><span t-esc='sr_no'/> </td>
+                                <td><span t-esc='sr_no'/> </td>
+                                <td><span t-esc='sr_no'/> </td>
+                                <td><span t-esc='sr_no'/> </td>
+                                <td><span t-esc='sr_no'/> </td>
+                                <td><span t-esc='sr_no'/> </td>
+                                <td><span t-esc='sr_no'/> </td>
+                                <td><span t-esc='sr_no'/> </td>
+                                <td><span t-esc='sr_no'/> </td>
+                            </tr>
+                    </t>                         
+                </tbody>
+            </table>
+            
+            <br/>
+            <br/>  
+        </div>
+    </t>
+    </t>
+</template>
+    
+    
+</odoo>
