@@ -1,0 +1,2 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_de_expense_contract_limits_de_expense_contract_limits,de_expense_contract_limits.de_expense_contract_limits,model_de_expense_contract_limits_de_expense_contract_limits,base.group_user,1,1,1,1
