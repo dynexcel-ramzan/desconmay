@@ -101,38 +101,12 @@ class PayrollTaxComputation(models.AbstractModel):
                     month_days = self.env['fiscal.year.month'].sudo().search([('id','=',employee.pf_effec_date.month)], limit=1).days
                     month_start_date = employee.pf_effec_date.replace(day=1)
                     month_end_date = employee.pf_effec_date.replace(day=month_days)
-                    
-                    remaining_fiscal_month = 0
-                    tax_fiscal_month = employee.pf_effec_date.month
-                    if tax_fiscal_month==7:
-                        remaining_fiscal_month = 11
-                    elif tax_fiscal_month==8:
-                        remaining_fiscal_month = 10
-                    elif tax_fiscal_month==9:
-                        remaining_fiscal_month = 9
-                    elif tax_fiscal_month==10:
-                        remaining_fiscal_month = 8
-                    elif tax_fiscal_month==11:
-                        remaining_fiscal_month = 7
-                    elif tax_fiscal_month==12:
-                        remaining_fiscal_month = 6
-                    elif tax_fiscal_month==1:
-                        remaining_fiscal_month = 5
-                    elif tax_fiscal_month==2:
-                        remaining_fiscal_month = 4
-                    elif tax_fiscal_month==3:
-                        remaining_fiscal_month = 3
-                    elif tax_fiscal_month==4:
-                        remaining_fiscal_month = 2
-                    elif tax_fiscal_month==5:
-                        remaining_fiscal_month = 1
-                    elif tax_fiscal_month==6:
-                        remaining_fiscal_month = 0 
+                    fiscal_month = employee.pf_effec_date.month
                     if employee.pf_effec_date:
                         if  employee.pf_effec_date > month_start_date and employee.pf_effec_date < month_end_date:
-                            pf=((contract.wage * employee.company_id.pf_percent)/100) * remaining_fiscal_month  
+                            pf=((contract.wage * employee.company_id.pf_percent)/100) * fiscal_month  
                             total_pf_amt = (((contract.wage * employee.company_id.pf_percent)/100))/month_days
-                            delta_days = (month_end_date - employee.pf_effec_date).days+1
+                            delta_days = (month_end_date - employee.pf_effec_date).days 
                             current_month_pf_amt = total_pf_amt * delta_days
                             pf = pf + current_month_pf_amt
             apf = 0

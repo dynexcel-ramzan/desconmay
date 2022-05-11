@@ -7,9 +7,9 @@ class OnHandInventoryReport(models.TransientModel):
     _name = "employee.expense.wizard"
     _description = "Expolyee Expense Report"
 
-    date_from = fields.Date(string='Date From', required=True, default=fields.date.today())
-    date_to = fields.Date(string='Date to', required=True, default=fields.date.today())
-    company_id = fields.Many2one('res.company', string='Company', required=True, default=lambda self: self.env.company)
+    date_from = fields.Date(string='Date From', required=True)
+    date_to = fields.Date(string='Date to', required=True)
+    company_id = fields.Many2one('res.company', string='Company', required=True)
     
 
 

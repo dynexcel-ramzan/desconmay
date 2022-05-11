@@ -32,13 +32,13 @@
 
         <!--Open the wizard on click of menu-->
         <record id="employee_expense_action" model="ir.actions.act_window">
-            <field name="name">Employee Expense report new</field>
+            <field name="name"> Expense Advance Report</field>
             <field name="res_model">employee.expense.wizard</field>
             <field name="view_mode">form</field>
             <field name="target">new</field>
             <field name="view_id" ref="view_employee_expense_wizard_report"/>
         </record>
-      <menuitem action="employee_expense_action" id="employee_expense_Xlx_report" name="Employee Expense report" parent="account.menu_finance_payables" sequence="7"/>
+      <menuitem action="employee_expense_action" id="employee_expense_Xlx_report" name="Expense Advance Report" parent="account.menu_finance_payables" sequence="1"/>
 
 
   </data>

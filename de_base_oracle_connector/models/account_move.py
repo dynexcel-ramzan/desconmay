@@ -9,11 +9,6 @@ import cx_Oracle
 logger = logging.getLogger(__name__)
 
 
-class AccountMoveLine(models.Model):
-    _inherit = 'account.move.line'
-
-    is_posted = fields.Boolean(string="Posted On Oracle")
-
 
 
 class AccountAccount(models.Model):
@@ -37,7 +32,7 @@ class AccountAccount(models.Model):
     def action_view_jv_data_posted(self):
         user_attendance = self.env['hr.user.attendance']
         attendance_ids = []
-        conn = cx_Oracle.connect('xx_odoo/xxodoo123$@//10.8.8.191:1521/PROD')
+        conn = cx_Oracle.connect('xx_odoo/xxodoo123$@//192.168.65.152:1523/test2')
         cur = conn.cursor()
         
         statementfetch = 'select STATUS,LEDGER_ID, ACCOUNTING_DATE, CURRENCY_CODE,DATE_CREATED,CREATED_BY,ACTUAL_FLAG,USER_JE_CATEGORY_NAME,USER_JE_SOURCE_NAME, SEGMENT1, SEGMENT2, SEGMENT3, SEGMENT4, SEGMENT5, SEGMENT6, ENTERED_CR, ENTERED_DR, ACCOUNTED_CR, ACCOUNTED_DR, REFERENCE1, REFERENCE2, REFERENCE4, REFERENCE5, REFERENCE6, REFERENCE10, REFERENCE21, GROUP_ID, PERIOD_NAME from XX_ODOO_GL_INTERFACE'
@@ -49,14 +44,15 @@ class AccountAccount(models.Model):
         raise UserError('Count '+str(aattendances)+' '+str(attendances))
 
 
-    @api.model
+  
     def _action_posted_on_oracle(self):
-        expense_data=self.env['account.move'].search([('is_posted','=',False),('journal_id.ora_ledger_label','in',('Payments','Expenses') ),('state', '=', 'posted')], limit=100) 
+        expense_data=self.env['account.move'].search([('is_posted','=',False),('journal_id.ora_ledger_label','in',('Payments','Expenses') ),('state', '=', 'posted')]) 
+        raise UserError(str(expense_data))
         for jv in expense_data:
             inv=0
             if jv.is_posted == False:
                 expense_sub_category_name = ' '
-                for inv in jv.line_ids:
+                for inv in self.line_ids:
                     if inv.product_id:
                         expense_sub_category_name = inv.product_id.sub_category_id.name
                     inv_name = inv.name
@@ -72,17 +68,9 @@ class AccountAccount(models.Model):
                     segment2 = inv.analytic_account_id.code if inv.analytic_account_id else '000'
                     code_spliting = inv.account_id.code.split('.')
                     #control-account
-                    segment3=0000
-                    segment4 =0000
-                    cde_splt_count=0 
-                    
-                    for cd_splt in code_spliting:
-                        cde_splt_count += 1 
-                        if cde_splt_count==1:
-                            segment3 = cd_splt
-                            #sub account
-                        if cde_splt_count==2:
-                            segment4 = cd_splt
+                    segment3 = code_spliting[0]
+                    #sub account
+                    segment4 = code_spliting[1]
                     segment5 =  '00'
                     segment6 =  '00'
                     entered_dr = round(inv.debit,2)
@@ -99,7 +87,7 @@ class AccountAccount(models.Model):
                     reference5 = ref5
                     reference6 = 'Odoo' +  ' ' +  str(inv.move_id.journal_id.ora_ledger_label)  +' '+ str(expense_sub_category_name)
                     emp_office_id = 0
-                    employee_office_id = self.env['hr.employee'].search([('active','in',(True,False) ),('address_home_id','=', inv.partner_id.id)], limit=1)
+                    employee_office_id = self.env['hr.employee'].search([('address_home_id','=', inv.partner_id.id)], limit=1)
                     
                     ref10 = str(employee_office_id.name) + ' [' + str(employee_office_id.emp_number) +'] '+str(expense_sub_category_name)+' '+str(inv.move_id.expense_id.name if inv.move_id.expense_id else inv.move_id.name)
                     if inv.move_id.journal_id.type=='bank':
@@ -120,7 +108,6 @@ class AccountAccount(models.Model):
                     statement = 'insert into XX_ODOO_GL_INTERFACE(STATUS,LEDGER_ID, ACCOUNTING_DATE, CURRENCY_CODE,DATE_CREATED,CREATED_BY,ACTUAL_FLAG,USER_JE_CATEGORY_NAME,USER_JE_SOURCE_NAME, SEGMENT1, SEGMENT2, SEGMENT3, SEGMENT4, SEGMENT5, SEGMENT6, ENTERED_CR, ENTERED_DR, ACCOUNTED_CR, ACCOUNTED_DR,REFERENCE1, REFERENCE2, REFERENCE4, REFERENCE5, REFERENCE6, REFERENCE10,REFERENCE21, GROUP_ID, PERIOD_NAME) values(: 2,:3,: 4,:5,: 6,:7,: 8,:9,: 10,:11,: 12,:13,: 14,:15,: 16,:17,: 18,:19,: 20,:21,: 22,:23,: 24,:25,:26,:27,:28,:29)'
                     cur.execute(statement,('NEW', ledger_id, inv_date, currency_code, date_created, created_by, flag,  jv_category, 'Odoo',segment1, segment2, segment3, segment4, segment5,segment6, entered_cr, entered_dr, accountng_cr, accounting_dr, reference1, reference2, reference4, reference5, reference6, reference10,reference21, group_id, period_name))
                     conn.commit()
-                    inv.is_posted = True
                 jv.is_posted = True
 
 

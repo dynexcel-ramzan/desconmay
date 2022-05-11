@@ -28,13 +28,12 @@ class EmployeeRecruitment(models.AbstractModel):
         sheet.write(1,1, 'Employee Number',bold)
         sheet.write(1,2, 'Employee' ,bold)
         sheet.write(1,3, 'Employee Type' ,bold)
-        sheet.write(1,4, 'Date of Joining' ,bold)
-        sheet.write(1,5, 'Grade Type' ,bold)
-        sheet.write(1,6,'Job Position',bold)
-        sheet.write(1,7,'Grade' ,bold)
-        sheet.write(1,8, 'Department' ,bold)
-        sheet.write(1,9, 'Work location' ,bold)
-        sheet.write(1,10, 'Company' ,bold)
+        sheet.write(1,4, 'Grade Type' ,bold)
+        sheet.write(1,5,'Job Position',bold)
+        sheet.write(1,6,'Grade' ,bold)
+        sheet.write(1,7, 'Department' ,bold)
+        sheet.write(1,8, 'Work location' ,bold)
+        sheet.write(1,9, 'Company' ,bold)
         row = 2
         record_count=0
         for line in employees:
@@ -42,12 +41,11 @@ class EmployeeRecruitment(models.AbstractModel):
             sheet.write(row, 1, str(line.emp_number), format1)
             sheet.write(row, 2, str(line.name), format1)
             sheet.write(row, 3, str(line.emp_type), format1)
-            sheet.write(row, 4, str(line.date), format1)
-            sheet.write(row, 5, str(line.grade_type.name), format1)
-            sheet.write(row, 6, str(line.job_id.name if line.job_id else '-'), format1)
-            sheet.write(row, 7, str(line.grade_designation.name if line.grade_designation else '-'), format1)
-            sheet.write(row, 8, str(line.department_id.name if line.department_id else '-'), format1)  
-            sheet.write(row, 9, str(line.work_location_id.name if line.work_location_id else '-'), format1) 
-            sheet.write(row, 10, str(line.company_id.name), format1)
+            sheet.write(row, 4, str(line.grade_type.name), format1)
+            sheet.write(row, 5, str(line.job_id.name if line.job_id else '-'), format1)
+            sheet.write(row, 6, str(line.grade_designation.name if line.grade_designation else '-'), format1)
+            sheet.write(row, 7, str(line.department_id.name if line.department_id else '-'), format1)  
+            sheet.write(row, 8, str(line.work_location_id.name if line.work_location_id else '-'), format1) 
+            sheet.write(row, 9, str(line.company_id.name), format1)
             row += 1 
             record_count += 1

@@ -115,11 +115,6 @@ class CreateTimeOff(http.Controller):
             
             date_start =  date_start1 + relativedelta(hours =+ hours_from) 
             date_end = date_end1 + relativedelta(hours =+ hours_to)
-            if date_end < date_start:
-                hours_from = 8
-                hours_to = 16
-                date_start =  date_start1 + relativedelta(hours =+ hours_from) 
-                date_end = date_end1 + relativedelta(hours =+ hours_to)
             if kw.get('attachment'):
                 Attachments = request.env['ir.attachment']
                 name = kw.get('attachment').filename
@@ -223,12 +218,7 @@ class CreateTimeOff(http.Controller):
             request_date_from_period = 'am'
             if day_half == 'Evening':
                 leave_period_half = 'second_half' 
-                request_date_from_period = 'pm'  
-            if date_end < date_start:
-                hours_from = 8
-                hours_to = 12
-                date_start =  date_start1 + relativedelta(hours =+ hours_from) 
-                date_end = date_start2 + relativedelta(hours =+ hours_to)   
+                request_date_from_period = 'pm'    
             timeoff_val = {
                 'holiday_status_id': int(kw.get('leave_type_id')),
                 'employee_id': int(kw.get('employee_id')),            
@@ -275,10 +265,7 @@ class CreateTimeOff(http.Controller):
             date_start1 = datetime.strptime(kw.get('hours_date') , '%Y-%m-%d')
             short_leave_start_obj = datetime.strptime(kw.get('time_from'), '%H:%M')
             date_start =  date_start1 + relativedelta(hours =+ short_leave_start_obj.hour,minutes=short_leave_start_obj.minute)       
-            short_leave_hours = 2
-            if  employee11.shift_id:
-                short_leave_hours = employee11.shift_id.hours_per_day/4          
-            date_end =  date_start + relativedelta(hours =+ float(short_leave_hours))
+            date_end =  date_start + relativedelta(hours =+ float(employee11.shift_id.hours_per_day/4))
             timeoff_val = {
                 'holiday_status_id': int(kw.get('leave_type_id')),
                 'employee_id': int(kw.get('employee_id')),            

@@ -1,0 +1,30 @@
+<odoo>
+       <template id="pdf_report_layout">
+           <t t-set="company" t-value="user.company_id"/>
+           <div class="header">
+            <div class="row" >
+                <div class="col-1">
+                <i>
+                </i> 
+                </div>
+                    <div class="col-7">
+                     
+                </div>
+                <div class="col-4">
+              <i class='pull-right'>
+                  <br/>
+                  <br/>
+            
+                  <br/>
+                       <i>
+                        <span t-esc="context_timestamp(datetime.datetime.now()).strftime('%B-%d-%Y')"/>
+                      </i>
+            
+                 </i>
+                </div>
+               </div>
+               
+       </div>
+                
+    </template>
+</odoo>

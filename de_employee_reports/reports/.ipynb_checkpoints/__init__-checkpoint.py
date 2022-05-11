@@ -6,4 +6,5 @@ from . import hr_retirement_report
 from . import hr_resignation_report
 from . import location_wise_report
 from . import hr_probation_report
+from . import eobi_contribution_report
 

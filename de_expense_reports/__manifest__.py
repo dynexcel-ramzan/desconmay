@@ -26,7 +26,9 @@
     'data': [
         'security/ir.model.access.csv',
         'report/expense_report.xml',
+        'report/expense_sheet_report.xml',
         'wizard/employee_expense_wizard.xml',
+        'wizard/expense_sheet_wizard.xml',
         'views/views.xml',
         'views/templates.xml',
     ],

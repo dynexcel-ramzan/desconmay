@@ -37,7 +37,7 @@
                                <td><span t-esc="payment_req.name"/></td>
                                <td><span t-esc="payment_req.payment_type"/></td>
                                <td><span t-esc="payment_req.rule_id.ora_account_gl_code"/></td>
-                               <td><span t-esc="'{0:,}'.format(int(round(payment_req.amount)))"/> </td>
+                               <td><span t-esc="payment_req.amount"/> </td>
                                <td>Approved</td>
                            </tr>
                         </t>

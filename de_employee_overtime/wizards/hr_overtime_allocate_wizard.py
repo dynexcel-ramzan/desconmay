@@ -131,8 +131,6 @@ class HrOvertimeAllocate(models.TransientModel):
                 vals = {
                         'employee_id': att.employee_id.id,
                         'company_id': att.employee_id.company_id.id,
-                        'work_location_id': att.employee_id.work_location_id.id,
-                        'workf_location_id': att.employee_id.work_location_id.id, 
                         'date':  att.att_date,
                         'date_from': att.check_in,
                         'date_to': att.check_out,
@@ -149,8 +147,6 @@ class HrOvertimeAllocate(models.TransientModel):
                 vals = {
                         'employee_id': att.employee_id.id,
                         'company_id': att.employee_id.company_id.id,
-                        'work_location_id': att.employee_id.work_location_id.id,
-                        'workf_location_id': att.employee_id.work_location_id.id, 
                         'date':  att.att_date,
                         'date_from': att.check_in,
                         'date_to': att.check_out,
@@ -168,8 +164,6 @@ class HrOvertimeAllocate(models.TransientModel):
                     vals = {
                             'employee_id': att.employee_id.id,
                             'company_id': att.employee_id.company_id.id,
-                            'work_location_id': att.employee_id.work_location_id.id,
-                            'workf_location_id': att.employee_id.work_location_id.id,
                             'date':  att.att_date,
                             'date_from': att.check_in,
                             'date_to': att.check_out,

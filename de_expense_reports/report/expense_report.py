@@ -17,6 +17,11 @@ class OnEmployeeExpenseReport(models.AbstractModel):
         format2 = workbook.add_format({'align': 'center'})
         format3 = workbook.add_format({'align': 'center','bold': True,'border': True,})   
         
+        
+#         format4 = workbook.add_format({'num_format': '* "-"??;(@_)', 'fg_color': '#dfe4e4'})
+        
+      
+        
         sheet.set_column(0, 0, 40)
         sheet.set_column(1, 1, 20)
         sheet.set_column(2, 2, 20)
@@ -29,12 +34,17 @@ class OnEmployeeExpenseReport(models.AbstractModel):
         sheet.write('A1:A1',  data.company_id.name ,header_row_style)
         sheet.write('A2:A2',  str(data.date_from.strftime('%d-%b-%Y')) ,header_row_style)
         
+        
+        
+
         sheet.write(5,0,'Employees Name', bold)
         sheet.write(5,1 , 'Voucher#',bold)
         sheet.write(5,2 , 'Invoice Reference',bold)
         sheet.write(5,3 , "Status",bold)
         sheet.write(5,4 , "Amount (PKR)",bold)
     
+        
+#         row = 6
         total_amount = 0
         
         adv_sal = self.env['advance.against.expense'].search([('employee_id.company_id','=', data.company_id.id),('date','>=',data.date_from), ('date','<=',data.date_to)])
@@ -44,7 +54,7 @@ class OnEmployeeExpenseReport(models.AbstractModel):
             total_amount += line.amount
             sheet.write(row, 0, line.employee_id.name, format2)
             sheet.write(row, 1, line.name, format2)
-            sheet.write(row, 2, line.payment_entry_ref.name if line.payment_entry_ref else '-', format2)
+            sheet.write(row, 2, line.description, format2)
             sheet.write(row, 3, line.state, format2)
             sheet.write(row, 4, line.amount, format2)
             row += 1

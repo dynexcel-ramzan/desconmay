@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<data>
+		<record id="bank_report_form_view" model="ir.ui.view">
+			<field name="name">bank.report.form.view</field>
+			<field name="model">banks.model</field>
+			<field name="arch" type="xml">
+				<form string="Bank Letters">
+                    <group>
+                        <group>
+                            <field name="branch" widget="many2many_tags"/>
+                            <field name="cheque_no"/>
+                        </group>
+                        <group>
+                            <field name="bank" widget="many2many_tags"/>
+                        </group>
+                    </group>
+					<footer>
+						<button name="print_report" type="object" string="Print" class="oe_highlight" />
+                     </footer>
+				</form>
+
+            </field>
+        </record>
+    </data>
+
+
+		<record id="bank_report_pdf" model="ir.actions.act_window">
+			<field name="name">Bank report pdf</field>
+			<field name="res_model">banks.model</field>
+			<field name="view_id" ref="bank_report_form_view"/>
+			<field name="target">new</field>
+		</record>
+
+		<menuitem action="bank_report_pdf" id="bank_report" name="Bank report" parent="hr_payroll.menu_hr_payroll_report" sequence="1"/>
+
+</odoo>

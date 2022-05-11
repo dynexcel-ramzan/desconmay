@@ -91,9 +91,7 @@ class OracleSettingConnector(models.Model):
         return overtime_type    
         
     def _action_create_overtime(self):
-        ora_start_create_date = fields.date.today() - timedelta(5)
-        ora_end_create_date = fields.date.today() - timedelta(1)  
-        attendances=self.env['hr.attendance'].search([('employee_id.allow_overtime','=',True),('is_overtime','=',False),('att_date','>=',ora_start_create_date),('att_date','<=',ora_end_create_date),('check_in','!=',False),('check_out','!=',False)])
+        attendances=self.env['hr.attendance'].search([('employee_id.allow_overtime','=',True),('is_overtime','=',False),('write_date','>=',self.ora_create_date),('check_in','!=',False),('check_out','!=',False)])
         for att in attendances:
             day_min_ovt = 0
             overtime_rule = self.env['hr.overtime.rule'].search([('company_id','=',att.employee_id.company_id.id)])
@@ -118,8 +116,6 @@ class OracleSettingConnector(models.Model):
                 vals = {
                         'employee_id': att.employee_id.id,
                         'company_id': att.employee_id.company_id.id,
-                        'work_location_id': att.employee_id.work_location_id.id,
-                        'workf_location_id': att.employee_id.work_location_id.id, 
                         'date':  att.att_date,
                         'date_from': att.check_in,
                         'date_to': att.check_out,
@@ -136,8 +132,6 @@ class OracleSettingConnector(models.Model):
                 vals = {
                         'employee_id': att.employee_id.id,
                         'company_id': att.employee_id.company_id.id,
-                        'work_location_id': att.employee_id.work_location_id.id,
-                        'workf_location_id': att.employee_id.work_location_id.id,
                         'date':  att.att_date,
                         'date_from': att.check_in,
                         'date_to': att.check_out,
@@ -155,8 +149,6 @@ class OracleSettingConnector(models.Model):
                     vals = {
                             'employee_id': att.employee_id.id,
                             'company_id': att.employee_id.company_id.id,
-                            'work_location_id': att.employee_id.work_location_id.id,
-                            'workf_location_id': att.employee_id.work_location_id.id,
                             'date':  att.att_date,
                             'date_from': att.check_in,
                             'date_to': att.check_out,

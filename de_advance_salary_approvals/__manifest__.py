@@ -2,6 +2,8 @@
 {
     'name': "Advance Salary Approvals",
 
+
+
     'summary': """
         Employee Advance Salary Approvals
         """,

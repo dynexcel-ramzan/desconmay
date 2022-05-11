@@ -13,11 +13,10 @@ class HrPayslipEmployees(models.TransientModel):
 
     def _get_employees(self):
         active_employee_ids = self.env.context.get('active_employee_ids', False)
-        exist_payslips = self.env['hr.payslip'].search([('fiscal_month','=',fields.date.today().month)])
         if active_employee_ids:
-            return self.env['hr.employee'].search([('id', 'not in', exist_payslips.employee_id.ids), ('bank_account_id','!=',False),('active', '=', True),('stop_salary','=',False),('contract_ids.state', '=', 'open'), ('company_id', '=', self.env.company.id)])
+            return self.env['hr.employee'].search([('active', '=', True),('stop_salary','=',False),('contract_ids.state', '=', 'open'), ('company_id', '=', self.env.company.id)])
         # YTI check dates too
-        return self.env['hr.employee'].search([('id', 'not in', exist_payslips.employee_id.ids),('bank_account_id','!=',False), ('contract_ids.state', '=', 'open'),('active', '=', True),('stop_salary','=',False),('company_id', '=', self.env.company.id)])
+        return self.env['hr.employee'].search([('contract_ids.state', '=', 'open'),('active', '=', True),('stop_salary','=',False),('company_id', '=', self.env.company.id)])
     
 
 class HrTaxCreditWizard(models.TransientModel):

@@ -20,6 +20,7 @@ class BatchPayslip(models.Model):
         bold = workbook. add_format({'bold': True, 'align': 'center','border': True})
         sr_no = 1
         row = 1
+        
         sheet1.write(0, 0, 'Sr.#', format1)
         sheet1.write(0, 1, 'EMP', format1)
         sheet1.write(0, 2, 'Name', format1)
@@ -116,7 +117,6 @@ class BatchPayslip(models.Model):
         sheet2.write(0, 16, 'Bank Name', format1)
         sheet2.write(0, 17, 'Base Salary', format1)
         sheet2.write(0, 18, 'Days', format1)
-        sheet2.write(0, 19, 'OT Hours', format1)
         sheet2.set_column(0, 0, 5)
         sheet2.set_column(1, 1, 10)
         sheet2.set_column(2, 2, 5)
@@ -131,10 +131,8 @@ class BatchPayslip(models.Model):
         sheet2.set_column(12, 12, 13)
         sheet2.set_column(14, 17, 15)
         sheet2.set_column(18, 18, 5)
-        sheet2.set_column(19, 19, 10)
-        sheet2.set_column(20, 50, 20)
-        extra_col = 20
-        total_ovt_hours = 0
+        sheet2.set_column(19, 50, 20)
+        extra_col = 19
         for extra in uniq_extra_rule:
             sheet2.write(0, extra_col, str(extra.detail_label), format1)
             extra_col += 1
@@ -176,11 +174,10 @@ class BatchPayslip(models.Model):
                 payable_days = 0      
             if slip.employee_id.leave_ded==True:
                 payable_days = working_days        
-            contract = slip.contract_id
-            for cost_line in slip.contract_id.cost_center_information_line:
-                if cost_line.percentage_charged > 0:
-                    cost_account = cost_line.cost_center.name
-                    cost_center = cost_line.cost_center.code   
+            contract = self.env['hr.contract'].search([('employee_id','=',slip.employee_id.id),('state','=','open')], limit=1)  
+            for cost_line in contract.cost_center_information_line:
+                cost_account = cost_line.cost_center.name
+                cost_center = cost_line.cost_center.code   
             sheet2.write(sheet2_row, 0, sheet2_sr_no, format_right)
             sheet2.write(sheet2_row, 1, str(slip.date_to.strftime('%b-%y')), format_left)
             sheet2.write(sheet2_row, 2, str(cost_center), format_right)
@@ -199,14 +196,9 @@ class BatchPayslip(models.Model):
             sheet2.write(sheet2_row, 15, str(slip.employee_id.bank_account_id.acc_number if slip.employee_id.bank_account_id.acc_number else '-'), format_right)
             sheet2.write(sheet2_row, 16, str(slip.employee_id.bank_account_id.bank_id.name if slip.employee_id.bank_account_id.bank_id else '-'), format_left)
             sheet2.write(sheet2_row, 17, str('{0:,}'.format(int(round(contract.wage)))), format_right)
-            total_ovt_hrs = 0
-            ovt_hrs_entries = self.env['hr.overtime.entry'].search([('employee_id','=',slip.employee_id.id),('date','>=',slip.date_from),('date','<=',slip.date_to)])
-            for ovt_entry in ovt_hrs_entries:
-                total_ovt_hrs += ovt_entry.overtime_hours     
             sheet2.write(sheet2_row, 18, str(round(payable_days,1)), format_right)
-            sheet2.write(sheet2_row, 19, str('{0:,}'.format(int(round(total_ovt_hrs)))), format_right)
-            total_ovt_hours += total_ovt_hrs
-            sheet2_extra_col = 20
+            
+            sheet2_extra_col = 19
             for extra_value in uniq_extra_rule:
                 extra_amount = 0
                 for sheet2_extra_rule in slip.line_ids:
@@ -266,7 +258,6 @@ class BatchPayslip(models.Model):
         sheet2.write(sheet2_row, 16, str(), format1)
         sheet2.write(sheet2_row, 17, str(), format1)
         sheet2.write(sheet2_row, 18, str(), format1)
-        sheet2.write(sheet2_row, 19, str(total_ovt_hours), format1)
         
         grand_total_compansation_amount_list = []
         grand_total_deduction_amount_list = []
@@ -295,7 +286,7 @@ class BatchPayslip(models.Model):
                     if  ded_rule.salary_rule_id.id==grand_rule.id:
                         grand_compansation_total_amount += ded_rule.amount    
             grand_total_compansation_amount_list.append(grand_compansation_total_amount) 
-        grand_extra_col = 20 
+        grand_extra_col = 19 
         for grand_extra in grand_extra_total_amount_list:
             sheet2.write(sheet2_row, grand_extra_col, str('{0:,}'.format(int(round(grand_extra)))), format_total)
             grand_extra_col += 1

@@ -59,9 +59,9 @@ class PFLedgerReport(models.AbstractModel):
             total_balance = 0
             uniq_pf_ledger = self.env['partner.pf.ledger'].search([('type_id','=',uniq_type),('employee_id','=', employee),('date','>=', date_from),('date','<=',date_to)], order='date ASC')
             for uniq_pf in uniq_pf_ledger:
-                total_debit += abs(uniq_pf.debit)
-                total_credit += abs(uniq_pf.credit)
-                total_balance += abs(uniq_pf.balance)
+                total_debit = uniq_pf.debit
+                total_credit = uniq_pf.credit
+                total_balance = abs(uniq_pf.balance)
             type_desc = self.env['pf.ledger.type'].search([('id','=',uniq_type)], limit=1)
             line_vals = {
                 'name': type_desc.name,

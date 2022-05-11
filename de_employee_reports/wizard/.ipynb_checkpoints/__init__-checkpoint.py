@@ -6,3 +6,4 @@ from . import hr_retirement_wizard
 from . import hr_resignation_wizard 
 from . import hr_location_wise_wizard 
 from . import hr_probation_wizard 
+from . import eobi_contribution_wizard

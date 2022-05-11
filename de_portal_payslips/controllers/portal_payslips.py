@@ -179,8 +179,7 @@ class CustomerPortal(CustomerPortal):
         if date_begin and date_end:
             domain += [('create_date', '>', date_begin), ('create_date', '<=', date_end)]   
             
-        domain += [('employee_id.user_id','=',http.request.env.context.get('uid'))] 
-        domain += [('state','=', 'done' )]       
+        domain += [('employee_id.user_id','=',http.request.env.context.get('uid'))]       
         # search
         if search and search_in:
             search_domain = []

@@ -180,24 +180,24 @@
                                
                                <td>
                                    <strong style='color:blue;text-align:right;'>Rs</strong>
-                                   <span t-esc="'{0:,}'.format(int(round(range_line.start_amount)))"/> 
+                                   <span t-esc="round(range_line.start_amount)"/> 
                                    
                                </td>
                                
                                <td>
                                    <strong style='color:blue;text-align:right;'>- Rs</strong>
-                                   <span t-esc="'{0:,}'.format(int(round(range_line.end_amount)))"/>
+                                   <span t-esc="round(range_line.end_amount)"/>
                                </td>
                               
                                <td>
                                  <strong style='color:blue;text-align:right;'>+ </strong>    
-                                 <span t-esc="'{0:,}'.format(int(round(range_line.addition_amount)))"/>
+                                 <span t-esc="round(range_line.addition_amount)"/>
                                  
                                </td>
                                <td style='text-align:right;'><span t-esc="range_line.percentage"/> % of excess over 
                                  <strong style='color:blue;text-align:right;'>Rs</strong>  
                                </td>
-                               <td><span t-esc="'{0:,}'.format(int(round(range_line.deduction_amount)))"/></td>
+                               <td><span t-esc="round(range_line.deduction_amount)"/></td>
                            </tr>
                        </t>    
                    </tbody>

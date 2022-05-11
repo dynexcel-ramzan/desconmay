@@ -139,7 +139,7 @@
       
       <menuitem id="menu_hr_expense_ora_payments" name="Payments" sequence="2" parent="menu_hr_expense_ora_expenses" groups='de_portal_expence.group_payment_register_paid'  action="action_hr_expense_ora_payments"/>
       
-      <menuitem id="menu_hr_expense_account_emp_expenses_paid" name="Expenses" sequence="23" parent="menu_hr_expense_ora_expenses" groups='de_portal_expence.group_payment_register_paid'  action="action_hr_expense_account_paid"/>  
+    <menuitem id="menu_hr_expense_account_emp_expenses_paid" name="Expenses" sequence="23" parent="menu_hr_expense_ora_expenses" groups='de_portal_expence.group_payment_register_paid'  action="action_hr_expense_account_paid"/>  
       
       
     <record id="action_hr_expense_account_validation" model="ir.actions.act_window">

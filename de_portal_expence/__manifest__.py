@@ -3,8 +3,7 @@
     'name': "Portal Expense",
 
     'summary': """
-        Employee  Expense Record From Portal
-               """,
+        Employee  Expense Record From Portal""",
 
     'description': """
         Employee  Expense Record From Portal
@@ -19,7 +18,7 @@
     # Check https://github.com/odoo/odoo/blob/14.0/odoo/addons/base/data/ir_module_category_data.xml
     # for the full list
     'category': 'Accounting',
-    'version': '14.0.0.3',
+    'version': '14.0.0.2',
 
     # any module necessary for this one to work correctly
     'depends': [
@@ -32,7 +31,6 @@
         'web',
         'web_tour',
         'de_payroll_accounting',
-        'de_expense_contract_limits', 
         'digest',
         'de_employee_overtime',
         'base',

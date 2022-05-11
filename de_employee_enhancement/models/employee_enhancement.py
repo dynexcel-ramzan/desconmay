@@ -50,7 +50,6 @@ class EmployeeEnhancement(models.Model):
 
 
     emp_number = fields.Char('Employee Number', required=True)
-    dept_manager_id = fields.Many2one('hr.employee', string='Dept Manager')
     emp_status = fields.Char('Employee Status')
     emp_type = fields.Selection([
         ('permanent', 'Regular'),

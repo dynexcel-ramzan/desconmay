@@ -6,8 +6,6 @@ access_hr_employee_public,hr.employee.public,model_hr_employee_public,,1,1,1,1
 access_hr_employee,hr.employee,model_hr_employee,,1,1,1,1
 access_hr_manager_wizard,hr.manager.wizard,model_hr_manager_wizard,,1,1,1,1
 access_hr_resign_wizard,access.hr.resign.wizard,model_hr_resign_wizard,,1,1,1,1
-access_add_bank_account_wizard,access.add.bank.account.wizard,model_add_bank_account_wizard,,1,1,1,1
-
 
 
 
