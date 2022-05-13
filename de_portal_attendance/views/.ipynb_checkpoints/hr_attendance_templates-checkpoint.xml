@@ -2,7 +2,7 @@
 
 <odoo>
     
-      <template id="portal_rectify_layout" name="Portal layout: Rectify menu entry" inherit_id="portal.portal_breadcrumbs" priority="25">
+   <template id="portal_rectify_layout" name="Portal layout: Rectify menu entry" inherit_id="portal.portal_breadcrumbs" priority="25">
         <xpath expr="//ol[hasclass('o_portal_submenu')]" position="inside">
             <li t-if="page_name == 'rectify' or rectify" class="col-lg-2" t-attf-class="breadcrumb-item #{'active ' if not rectify else ''}">
                 <a t-if="rectify" t-attf-href="/hr/rectify/attendances?{{ keep_query() }}">Attendance Commitments</a>
@@ -142,7 +142,7 @@
 
     <template id="portal_hr_attendances" name="hr_attendance">
          <t t-set="foo" t-value="2 + 1"/>
-        <t t-call="portal.portal_layout">
+          <t t-call="portal.portal_layout">
             <t t-set="breadcrumbs_searchbar" t-value="True"/>
             <t t-call="portal.portal_searchbar">
                 <t t-set="title">Attendance</t>
@@ -152,49 +152,124 @@
                     There are no Attendance.
                 </div>
             </t>
-            <t t-if="grouped_attendances">
-                <t t-call="portal.portal_table">
-                    <t t-foreach="grouped_attendances" t-as="attendances">
-                        <thead>
-                            <tr t-attf-class="{{'thead-light' if not groupby == 'none' else ''}}">
-                                <th class="text-left">No#</th>
-                                <th class="text-left">Employee</th>
+            
+                <table class="table table-sm table-striped table-bordered"   id="oraattendanceTable">
+            
+                            <tr style='background-color:#875A7B; color:white;' >
                                 <th class="text-left">Check In</th>
+                                <th class="text-left">In Date</th>
+                                <th class="text-left">In Type</th>
+                                <th class="text-left">In Validity</th>
                                 <th class="text-left">Check Out</th>
+                                <th class="text-left">Out Date</th>
+                                <th class="text-left">Out Type</th>
+                                <th class="text-left">Out Validity</th>
                                 <th class="text-left">Worked Hours</th>
+                                <th class="text-left">Action</th>
                                 
                             </tr>
-                        </thead>
-                        <tbody>
-                            <t t-foreach="attendances" t-as="attendance"> 
-                                <t t-if="attendance.employee_id.user_id.id == uid">
+                            <t t-foreach="att_attendances" t-as="attendance"> 
+                              
                                 <tr>
-                                    <td class="text-left">
-                                          <a t-attf-href="/hr/attendance/#{attendance.id}?{{ keep_query() }}">#<span t-field="attendance.id"/></a>
-                                    </td>
-                                     <td>
-                                        <a t-attf-href="/hr/attendance/#{attendance.id}?{{ keep_query() }}"><span t-field="attendance.employee_id.name"/></a>
-                                    </td>
-                                     <td class="text-left">
+                                    <td class="check_in"> 
                                         <t t-if="attendance.check_in"> 
-                                        <span t-esc="attendance.check_in"  t-options='{"widget": "datetime"}' />                             </t>
+                                          <span t-esc="attendance.check_in"  t-options='{"widget": "datetime"}' />                                                       </t>
                                     </td>
-                                    <td class="text-left">
+                                    
+                                    <td class="in_date"> 
+                                        <input type="date" class="form-control s_website_form_input" name="in_date" id="in_date"   t-att-value="attendance.att_date"/> 
+                                    </td>
+                                    
+                                     <td class="in_type_validity">    
+                                       <select  id="in_type_validity" class="form-control  s_website_form_input" name="in_type_validity" >
+                                        <option value="in">
+                                           In
+                                        </option>
+                                        <option value="out">
+                                           Out
+                                        </option>
+                                           
+                                      </select>
+                                         
+                                     </td>
+                                    
+                                    <td class="in_validity">
+                                         
+                                       <select  id="in_validity" class="form-control  s_website_form_input" name="in_validity" >
+                                        <option value="valid">
+                                           Valid
+                                        </option>
+                                        <option value="invalid">
+                                           In-Valid
+                                        </option>
+                                           
+                                      </select>
+                                         
+                                     </td>
+                                    
+                                    <td class="check_out"> 
                                         <t t-if="attendance.check_out"> 
-                                        <span t-esc="attendance.check_out"  t-options='{"widget": "datetime"}' />     </t>
+                                           <span t-esc="attendance.check_out"  t-options='{"widget": "datetime"}' />                                                     </t>
                                     </td>
-                                    <td class="text-left">
-                                        <span t-esc="round(attendance.worked_hours,2)" />
+                                    
+                                    <td class="out_date">
+                                        <t t-if="attendance.check_out"> 
+                                           <input type="date" class="form-control s_website_form_input" name="out_date" id="out_date"   t-att-value="attendance.att_date"/> 
+                                        </t>
+                                        <t t-if="not attendance.check_out"> 
+                                           <input type="hidden" class="form-control s_website_form_input" name="out_date" id="out_date"   t-att-value="attendance.att_date"/> 
+                                        </t>
                                     </td>
-                                   <td>  
+                                    
+                                     <td class="out_type_validity">
+                                      <t t-if="not attendance.check_out"> 
+                                           <input type="hidden" class="form-control s_website_form_input" name="out_type_validity" id="out_type_validity"   t-att-value="Out"/>
+                                      </t>    
+                                      <t t-if="attendance.check_out">   
+                                          <select  id="out_type_validity" class="form-control  s_website_form_input" name="out_type_validity" >
+                                            <option value="out">
+                                               Out
+                                            </option>   
+                                            <option value="in">
+                                               In
+                                            </option>   
+                                          </select>
+                                      </t>
+                                        
+                                         
+                                     </td>
+                                    
+                                    <td class="out_validity">
+                                       <t t-if="not attendance.check_out"> 
+                                           <input type="hidden" class="form-control s_website_form_input" name="out_validity" id="out_validity"   t-att-value="valid"/>
+                                      </t>  
+                                      <t t-if="attendance.check_out">     
+                                        <select  id="out_validity" class="form-control  s_website_form_input" name="out_validity" >
+                                        <option value="valid">
+                                           Valid
+                                        </option>
+                                        <option value="invalid">
+                                           In-Valid
+                                        </option>
+                                           
+                                      </select>
+                                     </t>    
+                                    </td>
+                                    
+                                    <td class='rec_id'>
+                                        <input type="hidden" class="form-control s_website_form_input" name="rec_id" id="rec_id"   t-att-value="attendance.id"/> 
+                                        
+                                        <span t-esc="round(attendance.worked_hours,2)"   /> 
+                                    </td>
+                                    <td>  
                                        
                                        <t t-if = "attendance.worked_hours == 0">
                                              <a t-attf-href="/hr/attendance/rectify/#{attendance.id}?" title="Rectify"><div class="btn btn-warning"><i class="fa fa-wrench"></i></div></a> 
                                            </t>
                                     </td>
-
+                                    
                                 </tr>
-                            </t>
+                            
                             </t>  
                              <tr>
                                 <div>
@@ -209,10 +284,66 @@
                                 </div>
                             </tr> 
                            
-                        </tbody>
-                    </t>
-                </t>
-            </t>   
+                        
+                  
+                </table>
+                <form id="portal_ora_attendance_form_line" data-toggle="validator" action="/hr/attendance/line/save">
+                      
+                      <input type="hidden" id="ora_attendance_vals" class="form-control s_website_form_input" name="ora_attendance_vals"  multiple="true" />
+                    
+                      <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                         <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+                         <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+                         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script> 
+                         <script src="/de_portal_attendance/static/src/js/jquery_min.js"></script> 
+                    
+                      <script type="text/javascript">
+                          
+                        $(document).ready(function(){
+                        $("#oraattendance").on('click',function(){
+                           var oraattendancedata=[];
+                           // loop over each table row (tr)
+                           $("#oraattendanceTable tr").each(function(){
+                                var currentRow=$(this);
+                                var col1_value=currentRow.find(".in_date input").val();
+                                var col2_value=currentRow.find(".in_type_validity select").val();
+                                var col3_value=currentRow.find(".in_validity select").val();
+                                var col4_value=currentRow.find(".out_date input").val();
+                                var col5_value=currentRow.find(".out_type_validity select").val();
+                                var col6_value=currentRow.find(".out_validity select").val();
+                                var col7_value=currentRow.find(".rec_id input").val();
+                                
+                                if ( col5_value !== "in" &amp;&amp; col5_value !== "out" ){
+                                  var col5_value=currentRow.find(".out_type_validity input").val();     
+                                }
+                                if (  col6_value !== "invalid" &amp;&amp; col6_value !== "valid"  ){
+                                  var col6_value=currentRow.find(".out_validity input").val();     
+                                }
+                                var obj={};
+                                obj.col1=col1_value;
+                                obj.col2=col2_value;
+                                obj.col3=col3_value;
+                                obj.col4=col4_value;
+                                obj.col5=col5_value;
+                                obj.col6=col6_value;
+                                obj.col7=col7_value;
+                                oraattendancedata.push(obj);
+                           });
+                         oraattendancedictionary = JSON.stringify(oraattendancedata); 
+                         var lista = document.getElementById("ora_attendance_vals")
+                         lista.value = oraattendancedictionary 
+                         console.log(oraattendancedata);   
+                         });
+                       });
+                      </script> 
+                       
+                     <div class="form-group col-12 s_website_form_submit" data-name="Submit Button">
+                            <div style="width: 200px;" class="s_website_form_label"></div>
+                            <button type="submit" id="oraattendance" class="btn btn-primary pull-left">Submit</button>
+                            <span id="s_website_form_result"></span>
+                        </div>
+                </form>
+            
         </t>
     </template>
     
@@ -223,10 +354,7 @@
        <template id="attendance_create_rectify" name="Create Attendance">
         <t t-call="portal.portal_layout">
                <div id="wrap">
-                  
-                   
-                   
-                            <div class="oe_structure" data-oe-model="ir.ui.view" data-oe-id="2052" data-oe-field="arch" data-oe-xpath="/t[1]/t[1]/div[1]/div[1]">
+                    <div class="oe_structure" data-oe-model="ir.ui.view" data-oe-id="2052" data-oe-field="arch" data-oe-xpath="/t[1]/t[1]/div[1]/div[1]">
                                 <section class="s_title parallax s_parallax_is_fixed bg-white-100 pt24 pb24" data-vcss="001" data-snippet="s_title" data-scroll-background-ratio="1">
                                     <span class="s_parallax_bg oe_img_bg" style="background-image: url('/web/image/website.s_banner_default_image'); background-position: 50% 0;"></span>
                                     <div class="o_we_bg_filter bg-white-50"></div>

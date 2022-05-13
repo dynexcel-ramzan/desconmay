@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 from . import config
 from . import update
 from collections import defaultdict
@@ -19,6 +18,8 @@ from odoo.http import request
 from odoo.addons.portal.controllers.portal import CustomerPortal, pager as portal_pager
 from odoo.tools import groupby as groupbyelem
 from odoo.osv.expression import OR
+import base64
+import ast
 
 def attendance_page_content(flag = 0):
     emps = request.env['hr.employee'].sudo().search([('user_id','=',http.request.env.context.get('uid'))])
@@ -68,7 +69,164 @@ class CreateAttendance(http.Controller):
         return request.render("de_portal_attendance.print_attendance_report", print_page_content())
     
    
-    
+
+
+    @http.route('/hr/attendance/line/save', type="http", auth="public", website=True)
+    def action_attendance_user_rectify(self, **kw):
+        ora_attendance_vals_list = []
+        if kw.get('ora_attendance_vals'):
+            ora_attendance_vals_list = ast.literal_eval(kw.get('ora_attendance_vals'))
+        inner_count = 0
+        count = 0
+        for ora_att in ora_attendance_vals_list:   
+            count += 1
+        for ora_att in ora_attendance_vals_list:   
+            inner_count += 1
+            if inner_count > 1 and inner_count < count:
+                current_att = request.env['hr.attendance'].sudo().search([('id' ,'=', int(ora_att['col7']) )], limit=1)
+                """
+                   Unnecessary Attendance present in odoo
+                """
+                if ora_att['col3']=='invalid' and ora_att['col6']=='invalid': 
+                    
+                    current_att.update({
+                        'in_validity': ora_att['col3']  ,
+                        'out_validity': ora_att['col6']  ,
+                        'check_in': current_att.check_in,
+                        'check_out': current_att.check_out,
+                        'att_date': current_att.att_date,
+                        'out_date':  ora_att['col4']  ,
+                        'in_date':  ora_att['col1']  ,
+                        'in_type_validity':  ora_att['col2']  ,
+                        'out_type_validity': ora_att['col5']  ,
+                    })    
+                elif ora_att['col3']=='invalid':
+                    if current_att.check_in:
+                        att_vals = {
+                            'check_in': current_att.check_in,
+                            'att_date': current_att.check_in,
+                            'in_validity': ora_att['col6']  ,
+                            'in_date':  ora_att['col4']  ,
+                            'in_type_validity': ora_att['col5']  ,
+                        }
+                        curr_att=request.env['hr.attendance'].create(att_vals)
+                        current_att.update({
+                            'in_validity': ora_att['col3']  ,
+                            'in_date':  ora_att['col1']  ,
+                            'in_type_validity':  ora_att['col2']  ,
+                            'check_in': False,
+                        })                                  
+                elif ora_att['col6']=='invalid':
+                    att_vals = {
+                        'check_in': current_att.check_out,
+                        'att_date': current_att.check_out,
+                        'in_validity': ora_att['col6']  ,
+                        'in_date':  ora_att['col4']  ,
+                        'in_type_validity': ora_att['col5']  ,
+                    }
+                    curr_att=request.env['hr.attendance'].create(att_vals)
+                    current_att.update({
+                        'out_validity': ora_att['col6']  ,
+                        'out_date':  ora_att['col4']  ,
+                        'out_type_validity': ora_att['col5']  ,
+                        'check_out': False,
+                    }) 
+                    
+                if ora_att['col2']=='out' and ora_att['col5']=='in':
+                    exist_current_att = request.env['hr.attendance'].sudo().search([('att_date' ,'=', ora_att['col1'] )], limit=1)  
+                    if current_att.check_in and current_att.check_out:
+                        exist_current_att.update({
+                            'check_in': current_att.check_out,
+                            'att_date': current_att.check_out,
+                            'check_out': current_att.check_in,
+                        }) 
+                    elif current_att.check_out:
+                        new_vals = {
+                            'employee_id': exist_current_att.employee_id.id,
+                            'check_in':  exist_current_att.check_in,
+                            'att_date':  exist_current_att.cehck_in,
+                        }
+                        attendance=request.env['hr.attendance'].sudo().create(new_vals)
+                        
+                        exist_current_att.update({
+                            'check_in': current_att.check_out,
+                            'att_date': current_att.check_out,
+                        })    
+                    elif current_att.check_in:
+                        innew_vals = {
+                            'employee_id': exist_current_att.employee_id.id,
+                            'check_out':  exist_current_att.check_out,
+                            'att_date':  exist_current_att.att_date,
+                        }
+                        in_attendance=self.env['hr.attendance'].sudo().create(innew_vals)
+                        exist_current_att.update({
+                            'check_out': current_att.check_in,
+                            'att_date': current_att.check_in,
+                        }) 
+                   
+                elif ora_att['col2']=='out':
+                    exist_current_att = request.env['hr.attendance'].sudo().search([('id','!=', current_att.id),('att_date' ,'=', ora_att['col1'] )], order='check_in ASC' , limit=1)
+                    current_in_time=0
+                    if current_att.check_in:
+                        current_in_time = current_att.check_in
+                        out_new_vals = {
+                            'employee_id': exist_current_att.employee_id.id,
+                            'check_out':  exist_current_att.check_out,
+                            'att_date':  exist_current_att.att_date,
+                        }
+                        out_attendance=request.env['hr.attendance'].sudo().create(out_new_vals)
+                        exist_current_att.update({
+                            'check_out': current_att.check_in,
+                        })  
+                        current_att.update({
+                            'check_in': False
+                        })
+                    
+                elif ora_att['col5']=='in':
+                    exist_current_att = request.env['hr.attendance'].sudo().search([('att_date' ,'=', ora_att['col4'] )], limit=1)
+                    if exist_current_att.check_out and exist_current_att.check_in:
+                        if current_att.check_out:
+                            in_new_vals = {
+                                'employee_id': exist_current_att.employee_id.id,
+                                'check_out':  exist_current_att.check_in,
+                                'att_date':  exist_current_att.att_date,
+                            }
+                            in_attendance=request.env['hr.attendance'].sudo().create(in_new_vals)
+                            exist_current_att.update({
+                                'check_in': current_att.check_out,  
+                            })
+                    elif exist_current_att.check_out:   
+                        
+                        if current_att.check_out:
+                            in_new_vals = {
+                                'employee_id': exist_current_att.employee_id.id,
+                                'check_out':  exist_current_att.check_in,
+                                'att_date':  exist_current_att.att_date,
+                            }
+                            out_attendance=request.env['hr.attendance'].sudo().create(in_new_vals)
+                            exist_current_att.update({
+                                'check_in': current_att.check_out,  
+                            })
+                    elif exist_current_att.check_in:   
+                        if current_att.check_out:
+                            in_new_vals = {
+                                'employee_id': exist_current_att.employee_id.id,
+                                'check_out':  exist_current_att.check_in,
+                                'att_date':  exist_current_att.att_date,
+                            }
+                            in_attendance=request.env['hr.attendance'].sudo().create(in_new_vals)
+                            exist_current_att.update({
+                                'check_in': current_att.check_out,  
+                                'att_date': current_att.check_out,  
+                                'check_out': exist_current_att.check_in,
+                            }) 
+                            
+        emp_attendance = request.env['hr.attendance'].search([('employee_id.user_id','=', http.request.env.context.get('uid') ) ]) 
+        for emp_att in emp_attendance:
+            if not emp_att.check_in and not emp_att.check_out:
+                emp_att.unlink()
+                
+        return request.redirect('/hr/attendances')
     
     
     @http.route('/hr/attendance/rectify/save', type="http", auth="public", website=True)
@@ -446,7 +604,8 @@ class CustomerPortal(CustomerPortal):
         }
                                                 
         searchbar_filters = {
-            'all': {'label': _('All'), 'domain': []},
+            'all': {'label': _('Valid'), 'domain': [('in_validity' ,'=', 'valid')]},
+            'invalid': {'label': _('In-Valid'), 'domain': [('in_validity' ,'=', 'invalid')]},
         }
            
         searchbar_inputs = {
@@ -469,7 +628,6 @@ class CustomerPortal(CustomerPortal):
         if not filterby:
             filterby = 'all'
         domain = searchbar_filters.get(filterby, searchbar_filters.get('all'))['domain']
-#         domain = []
         if date_begin and date_end:
             domain += [('create_date', '>', date_begin), ('create_date', '<=', date_end)]       
 
@@ -549,7 +707,8 @@ class CustomerPortal(CustomerPortal):
         }
                                                 
         searchbar_filters = {
-            'all': {'label': _('All'), 'domain': []},
+            'all': {'label': _('Valid'), 'domain': [('in_validity','=','valid')]},
+            'invalid': {'label': _('In-Valid'), 'domain': [('in_validity','=','invalid')]},
         }
            
         searchbar_inputs = {
@@ -600,7 +759,9 @@ class CustomerPortal(CustomerPortal):
         request.session['my_attendance_history'] = _attendances.ids[:100]
 
         grouped_attendances = [project_groups]
-                
+        ora_att_date = fields.date.today() - timedelta(30)
+#         raise UserError(str(ora_att_date))
+        att_attendances = request.env['hr.attendance'].sudo().search([ ('employee_id.user_id', '=', http.request.env.context.get('uid') ), ('att_date','>=', ora_att_date ) ])        
         paging(0,0,1)
         paging(grouped_attendances)
         
@@ -608,6 +769,7 @@ class CustomerPortal(CustomerPortal):
             'date': date_begin,
             'date_end': date_end,
             'grouped_attendances': grouped_attendances,
+            'att_attendances': att_attendances,
             'page_name': 'attendance',
             'default_url': '/hr/attendances',
             'pager': pager,
