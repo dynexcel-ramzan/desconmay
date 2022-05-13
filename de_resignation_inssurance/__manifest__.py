@@ -20,7 +20,7 @@
     'version': '0.1',
 
     # any module necessary for this one to work correctly
-    'depends': ['base', 'report_xlsx'],
+    'depends': ['base', 'report_xlsx', 'hr', 'hr_holidays','de_employee_overtime'],
 
     # always loaded
     'data': [
