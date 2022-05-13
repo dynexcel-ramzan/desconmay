@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 from . import config
 from . import update
 from collections import defaultdict
@@ -18,8 +19,6 @@ from odoo.http import request
 from odoo.addons.portal.controllers.portal import CustomerPortal, pager as portal_pager
 from odoo.tools import groupby as groupbyelem
 from odoo.osv.expression import OR
-import base64
-import ast
 
 def attendance_page_content(flag = 0):
     emps = request.env['hr.employee'].sudo().search([('user_id','=',http.request.env.context.get('uid'))])
@@ -69,144 +68,7 @@ class CreateAttendance(http.Controller):
         return request.render("de_portal_attendance.print_attendance_report", print_page_content())
     
    
-
-
-    @http.route('/hr/attendance/line/save', type="http", auth="public", website=True)
-    def action_attendance_user_rectify(self, **kw):
-        ora_attendance_vals_list = []
-        if kw.get('ora_attendance_vals'):
-            ora_attendance_vals_list = ast.literal_eval(kw.get('ora_attendance_vals'))
-        inner_count = 0
-        count = 0
-        for ora_att in ora_attendance_vals_list:   
-            count += 1
-        for ora_att in ora_attendance_vals_list:   
-            inner_count += 1
-            if inner_count > 1 and inner_count < count:
-                current_att = request.env['hr.attendance'].sudo().search([('id' ,'=', int(ora_att['col7']) )], limit=1)
-                """
-                   Unnecessary Attendance present in odoo
-                """
-                if ora_att['col3']=='invalid' and ora_att['col6']=='invalid':
-                    current_att.update({
-                        'in_validity': ora_att['col3']  ,
-                        'out_validity': ora_att['col6']  ,
-                        'check_in': current_att.check_in,
-                        'check_out': current_att.check_out,
-                        'att_date': current_att.att_date,
-                        'out_date':  ora_att['col4']  ,
-                        'in_date':  ora_att['col1']  ,
-                        'in_type_validity':  ora_att['col2']  ,
-                        'out_type_validity': ora_att['col5']  ,
-                    })    
-                elif ora_att['col3']=='invalid':
-                    if current_att.check_in and current_att.check_out:
-                        att_vals = {
-                            'check_in': current_att.check_in,
-                            'att_date': current_att.check_in,
-                            'in_validity': 'invalid'  ,
-                            'in_date':  ora_att['col4']  ,
-                            'in_type_validity': ora_att['col5']  ,
-                        }
-                        curr_att=request.env['hr.attendance'].create(att_vals)
-                        current_att.update({
-                            'in_validity': ora_att['col3']  ,
-                            'in_date':  ora_att['col1']  ,
-                            'in_type_validity':  ora_att['col2']  ,
-                            'check_in': False,
-                        })
-                    elif current_att.check_in:
-                        current_att.update({
-                            'in_validity': ora_att['col3'],
-                            'in_date': ora_att['col1'],
-                            'in_type_validity': ora_att['col2'],
-                        })
-                elif ora_att['col6']=='invalid':
-                    if current_att.check_out and current_att.check_in:
-                        att_vals = {
-                            'check_in': current_att.check_out,
-                            'att_date': current_att.check_out,
-                            'in_validity': ora_att['col6']  ,
-                            'in_date':  ora_att['col4']  ,
-                            'in_type_validity': ora_att['col5']  ,
-                        }
-                        curr_att=request.env['hr.attendance'].create(att_vals)
-                        current_att.update({
-                            'out_validity': ora_att['col6']  ,
-                            'out_date':  ora_att['col4']  ,
-                            'out_type_validity': ora_att['col5']  ,
-                            'check_out': False,
-                        })
-                    elif current_att.check_out:
-                        current_att.update({
-                            'out_validity': ora_att['col6'],
-                            'out_date': ora_att['col4'],
-                            'out_type_validity': ora_att['col5'],
-                        })
-                if ora_att['col2']=='out' and ora_att['col5']=='in':
-                    pass
-                elif ora_att['col2']=='out':
-                    exist_current_att = request.env['hr.attendance'].sudo().search([('employee_id' ,'=', current_att.employee_id.id),('id','!=', current_att.id),('att_date' ,'=', ora_att['col1'] )], order='check_in ASC' , limit=1)
-                    if current_att.check_in and exist_current_att.check_in:
-                        out_new_vals = {
-                            'employee_id': exist_current_att.employee_id.id,
-                            'check_out':  exist_current_att.check_out,
-                            'att_date':  exist_current_att.att_date,
-                        }
-                        out_attendance=request.env['hr.attendance'].sudo().create(out_new_vals)
-                        exist_current_att.update({
-                            'check_out': current_att.check_in,
-                        })
-                        current_att.update({
-                            'check_in': False
-                        })
-                elif ora_att['col5']=='in':
-                    exist_current_att = request.env['hr.attendance'].sudo().search([('employee_id','=',current_att.employee_id.id),('att_date' ,'=', ora_att['col4'] ),('id','!=',current_att.id)], limit=1)
-                    if current_att.check_out and exist_current_att.check_in:
-                        in_new_vals = {
-                            'employee_id': exist_current_att.employee_id.id,
-                            'check_out':  exist_current_att.check_in,
-                            'att_date':  exist_current_att.att_date,
-                        }
-                        in_attendance=request.env['hr.attendance'].sudo().create(in_new_vals)
-                        exist_current_att.update({
-                            'check_in': current_att.check_out,
-                        })
-                    elif exist_current_att.check_out:
-                        if current_att.check_out > exist_current_att.check_out:
-                            exist_current_att.update({
-                                'check_in': current_att.check_out,  
-                            })
-                    elif exist_current_att.check_in:   
-                        if current_att.check_out:
-                            in_new_vals = {
-                                'employee_id': exist_current_att.employee_id.id,
-                                'check_out':  exist_current_att.check_in,
-                                'att_date':  exist_current_att.att_date,
-                            }
-                            in_attendance = request.env['hr.attendance'].sudo().create(in_new_vals)
-                            exist_current_att.update({
-                                'check_in': current_att.check_out,  
-                                'att_date': current_att.check_out,  
-                                'check_out': exist_current_att.check_in,
-                            }) 
-                            
-        emp_attendance = request.env['hr.attendance'].search([('employee_id.user_id','=', http.request.env.context.get('uid') ) ], order='check_in ASC')
-        for emp_att in emp_attendance:
-            if emp_att.check_in and not emp_att.check_out:
-
-                today_att=request.env['hr.attendance'].search([('id','!=',emp_att.id),('employee_id','=',emp_att.employee_id.id),('att_date','=',emp_att.att_date),('check_in','=', False)], order='check_out DESC',limit=1)
-                emp_att.update({
-                    'check_out': today_att.check_out,
-                    'out_validity': 'valid',
-                })
-                today_att.update({
-                    'check_out': False,
-                })
-            if not emp_att.check_in and not emp_att.check_out:
-                emp_att.unlink()
-                
-        return request.redirect('/hr/attendances')
+    
     
     
     @http.route('/hr/attendance/rectify/save', type="http", auth="public", website=True)
@@ -584,8 +446,7 @@ class CustomerPortal(CustomerPortal):
         }
                                                 
         searchbar_filters = {
-            'all': {'label': _('Valid'), 'domain': [('in_validity' ,'=', 'valid')]},
-            'invalid': {'label': _('In-Valid'), 'domain': [('in_validity' ,'=', 'invalid')]},
+            'all': {'label': _('All'), 'domain': []},
         }
            
         searchbar_inputs = {
@@ -594,20 +455,24 @@ class CustomerPortal(CustomerPortal):
         }
         
         searchbar_groupby = {
-            'id': {'input': 'id', 'label': _('None')},
+            'none': {'input': 'none', 'label': _('None')},
         }
         date = fields.date.today() - timedelta(30)
-        project_groups = request.env['hr.attendance.rectification'].sudo().search([('employee_id.user_id','=', http.request.env.context.get('uid'))])
+        project_groups = request.env['hr.attendance.rectification'].search([('employee_id.user_id','=', http.request.env.context.get('uid'))])
+
         # default sort by value
         if not sortby:
             sortby = 'date'
         order = searchbar_sortings[sortby]['order']
+
         # default filter by value
         if not filterby:
             filterby = 'all'
         domain = searchbar_filters.get(filterby, searchbar_filters.get('all'))['domain']
+#         domain = []
         if date_begin and date_end:
-            domain += [('create_date', '>', date_begin), ('create_date', '<=', date_end)]
+            domain += [('create_date', '>', date_begin), ('create_date', '<=', date_end)]       
+
         # search
         if search and search_in:
             search_domain = []
@@ -618,6 +483,7 @@ class CustomerPortal(CustomerPortal):
             domain += search_domain
         domain += [('employee_id.user_id', '=', http.request.env.context.get('uid'))] 
         rectify_count = request.env['hr.attendance.rectification'].search_count(domain)
+
         pager = portal_pager(
             url="/hr/rectify/attendances",
             url_args={'date_begin': date_begin, 'date_end': date_end, 'sortby': sortby, 'filterby': filterby,
@@ -626,9 +492,12 @@ class CustomerPortal(CustomerPortal):
             page=page,
             step=self._items_per_page
         )
+
         _rectification = request.env['hr.attendance.rectification'].sudo().search(domain, order=order, limit=self._items_per_page, offset=pager['offset'])
         request.session['my_rectify_attendance_history'] = _rectification.ids[:100]
+
         grouped_rectify_attendances = [project_groups]
+                
         paging(0,0,1)
         paging(grouped_rectify_attendances)
         
@@ -680,12 +549,11 @@ class CustomerPortal(CustomerPortal):
         }
                                                 
         searchbar_filters = {
-            'all': {'label': _('Valid'), 'domain': [('in_validity','=','valid')]},
-            'invalid': {'label': _('In-Valid'), 'domain': [('in_validity','=','invalid')]},
+            'all': {'label': _('All'), 'domain': []},
         }
            
         searchbar_inputs = {
-            'in_validity': {'input': 'in_validity', 'label': _('Search in Validity')},
+            'id': {'input': 'id', 'label': _('Search in No#')},
             'employee_id.name': {'input': 'employee_id.name', 'label': _('Search in Employee')},
         }
         
@@ -732,9 +600,7 @@ class CustomerPortal(CustomerPortal):
         request.session['my_attendance_history'] = _attendances.ids[:100]
 
         grouped_attendances = [project_groups]
-        ora_att_date = fields.date.today() - timedelta(30)
-#         raise UserError(str(ora_att_date))
-        att_attendances = request.env['hr.attendance'].sudo().search([ ('employee_id.user_id', '=', http.request.env.context.get('uid') ), ('att_date','>=', ora_att_date ) ])        
+                
         paging(0,0,1)
         paging(grouped_attendances)
         
@@ -742,7 +608,6 @@ class CustomerPortal(CustomerPortal):
             'date': date_begin,
             'date_end': date_end,
             'grouped_attendances': grouped_attendances,
-            'att_attendances': att_attendances,
             'page_name': 'attendance',
             'default_url': '/hr/attendances',
             'pager': pager,
@@ -757,3 +622,177 @@ class CustomerPortal(CustomerPortal):
         return request.render("de_portal_attendance.portal_hr_attendances", values)   
 
    
+    @http.route(['/hr/attendance/<int:attendance_id>'], type='http', auth="user", website=True)
+    def portal_hr_attendance(self, attendance_id, access_token=None, **kw):
+        values = []
+
+        id = attendance_id
+        try:
+            attendance_sudo = self._document_check_access('hr.attendance', attendance_id, access_token)
+        except (AccessError, MissingError):
+            return request.redirect('/my')
+        
+        next_id = 0
+        pre_id = 0
+        attendance_user_flag = 0
+
+                
+        attendance_id_list = paging(0,1,0)
+        next_next_id = 0
+        attendance_id_list.sort()
+        length_list = len(attendance_id_list)
+        length_list = length_list - 1
+        if length_list != 0:
+            if attendance_id in attendance_id_list:
+                attendance_id_loc = attendance_id_list.index(attendance_id)
+                if attendance_id_loc == 0:
+                    next_id = 1
+                    pre_id = 0
+                elif attendance_id_loc == length_list:
+                    next_id = 0
+                    pre_id = 1
+                else:
+                    next_id = 1
+                    pre_id = 1
+        else:
+            next_id = 0
+            pre_id = 0
+
+        values = self._attendance_get_page_view_values(attendance_sudo,next_id, pre_id, attendance_user_flag,access_token, **kw) 
+        return request.render("de_portal_attendance.portal_hr_attendance", values)
+
+    @http.route(['/attendance/next/<int:attendance_id>'], type='http', auth="user", website=True)
+    def portal_my_next_attendance(self, attendance_id, access_token=None, **kw):
+        
+        attendance_id_list = paging(0,1,0)
+        next_next_id = 0
+        attendance_id_list.sort()
+        
+        length_list = len(attendance_id_list)
+        if length_list == 0:
+            return request.redirect('/hr')
+        length_list = length_list - 1
+        
+        if attendance_id in attendance_id_list:
+            attendance_id_loc = attendance_id_list.index(attendance_id)
+            next_next_id = attendance_id_list[attendance_id_loc + 1] 
+            next_next_id_loc = attendance_id_list.index(next_next_id)
+            if next_next_id_loc == length_list:
+                next_id = 0
+                pre_id = 1
+            else:
+                next_id = 1
+                pre_id = 1      
+        else:
+            buffer_larger = 0
+            buffer_smaller = 0
+            buffer = 0
+            for ids in attendance_id_list:
+                if ids < attendance_id:
+                    buffer_smaller = ids
+                if ids > attendance_id:
+                    buffer_smaller = ids
+                if buffer_larger and buffer_smaller:
+                    break
+            if buffer_larger:
+                next_next_id = buffer_smaller
+            elif buffer_smaller:
+                next_next_id = buffer_larger
+                
+            next_next_id_loc = attendance_id_list.index(next_next_id)
+            length_list = len(attendance_id_list)
+            length_list = length_list + 1
+            if next_next_id_loc == length_list:
+                next_id = 0
+                pre_id = 1
+            elif next_next_id_loc == 0:
+                next_id = 1
+                pre_id = 0
+            else:
+                next_id = 1
+                pre_id = 1
+         
+        values = []
+
+        id = attendance_id
+        try:
+            attendance_sudo = self._document_check_access('hr.attendance', next_next_id, access_token)
+        except (AccessError, MissingError):
+            return request.redirect('/my')
+        
+
+        attendance_user_flag = 0
+
+
+        values = self._attendance_get_page_view_values(attendance_sudo,next_id, pre_id, access_token, **kw) 
+        return request.render("de_portal_attendance.portal_hr_attendance", values)
+
+  
+    @http.route(['/attendance/pre/<int:attendance_id>'], type='http', auth="user", website=True)
+    def portal_my_pre_attendance(self, attendance_id, access_token=None, **kw):
+        
+        attendance_id_list = paging(0,1,0)
+        pre_pre_id = 0
+        attendance_id_list.sort()
+        length_list = len(attendance_id_list)
+    
+        if length_list == 0:
+            return request.redirect('/my')
+        
+        length_list = length_list - 1
+        if attendance_id in attendance_id_list:
+            attendance_id_loc = attendance_id_list.index(attendance_id)
+            pre_pre_id = attendance_id_list[attendance_id_loc - 1] 
+            pre_pre_id_loc = attendance_id_list.index(attendance_id)
+
+            if attendance_id_loc == 1:
+                next_id = 1
+                pre_id = 0
+            else:
+                next_id = 1
+                pre_id = 1      
+        else:
+            buffer_larger = 0
+            buffer_smaller = 0
+            buffer = 0
+            for ids in attendance_id_list:
+                if ids < attendance_id:
+                    buffer_smaller = ids
+                if ids > attendance_id:
+                    buffer_smaller = ids
+                if buffer_larger and buffer_smaller:
+                    break
+            if buffer_smaller:
+                pre_pre_id = buffer_smaller
+            elif buffer_larger:
+                pre_pre_id = buffer_larger
+                
+            pre_pre_id_loc = attendance_id_list.index(pre_pre_id)
+            length_list = len(attendance_id_list)
+            length_list = length_list -1
+            if pre_pre_id_loc == 0:
+                next_id = 1
+                pre_id = 0
+            elif pre_pre_id_loc == length_list:
+                next_id = 0
+                pre_id = 1
+            else:
+                next_id = 1
+                pre_id = 1
+   
+        values = []
+
+        id = pre_pre_id
+        try:
+            attendance_sudo = self._document_check_access('hr.attendance', pre_pre_id, access_token)
+        except (AccessError, MissingError):
+            return request.redirect('/my')
+        
+
+        attendance_user_flag = 0
+
+
+        values = self._attendance_get_page_view_values(attendance_sudo, next_id,pre_id, access_token, **kw) 
+        return request.render("de_portal_attendance.portal_hr_attendance", values)
+
+    

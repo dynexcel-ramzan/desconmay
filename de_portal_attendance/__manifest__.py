@@ -11,8 +11,6 @@
         'hr_attendance',
         'portal',
         'rating',
-        'de_employee_shift',
-        'de_oracle_attendance_connector',
         'resource',
         'web',
         'web_tour',
@@ -25,7 +23,6 @@
     'data': [
         'security/ir.model.access.csv',
         'views/hr_attendance_templates.xml',
-        'views/hr_attendance_views.xml',
     ],
     'test': [
     ],
