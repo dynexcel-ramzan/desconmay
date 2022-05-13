@@ -4,8 +4,35 @@ from odoo import models, fields, api, _
 from odoo.exceptions import AccessError, UserError, ValidationError
 
 class HrAttendance(models.Model):
-    _inherit = 'hr.attendance'  
+    _inherit = 'hr.attendance' 
+    
+    
+    in_validity = fields.Selection(selection=[
+            ('valid', 'Valid'),
+            ('invalid', 'In-Valid'),
+        ], string='In Validity',
+        default='valid')
+    in_type_validity = fields.Selection(selection=[
+            ('in', 'In'),
+            ('out', 'Out'),
+        ], string='In Type',
+        default='in')
+    
+    in_date = fields.Date(string='In Date')
+    
+    out_date = fields.Date(string='Out Date')
+    out_type_validity = fields.Selection(selection=[
+            ('in', 'In'),
+            ('out', 'Out'),
+        ], string='Out Type',
+        default='out')
+    out_validity = fields.Selection(selection=[
+            ('valid', 'Valid'),
+            ('invalid', 'In-Valid'),
+        ], string='Out Validity',
+        default='valid')
 
+    
     
     #def action_check_write_date(self):
     #    for line in self:
