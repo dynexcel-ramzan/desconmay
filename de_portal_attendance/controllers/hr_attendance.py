@@ -101,6 +101,7 @@ class CreateAttendance(http.Controller):
                     })    
                 elif ora_att['col3']=='invalid':
                     if current_att.check_in and current_att.check_out:
+                        
                         att_vals = {
                             'check_in': current_att.check_in,
                             'att_date': current_att.check_in,
@@ -108,13 +109,13 @@ class CreateAttendance(http.Controller):
                             'in_date':  ora_att['col4']  ,
                             'in_type_validity': ora_att['col5']  ,
                         }
-                        curr_att=request.env['hr.attendance'].create(att_vals)
+                        curr_att=request.env['hr.attendance'].sudo().create(att_vals)
                         current_att.update({
-                            'in_validity': ora_att['col3']  ,
-                            'in_date':  ora_att['col1']  ,
-                            'in_type_validity':  ora_att['col2']  ,
+#                             'in_validity': ora_att['col3']  ,
+#                             'in_date':  ora_att['col1']  ,
+#                             'in_type_validity':  ora_att['col2']  ,
                             'check_in': False,
-                        })
+                        })   
                     elif current_att.check_in:
                         current_att.update({
                             'in_validity': ora_att['col3'],
@@ -143,6 +144,68 @@ class CreateAttendance(http.Controller):
                             'out_date': ora_att['col4'],
                             'out_type_validity': ora_att['col5'],
                         })
+                
+                """
+                   In-valid Attendance present Re-processing
+                """
+                if ora_att['col3']=='valid' and ora_att['col6']=='valid':
+                    current_att.update({
+                        'in_validity': ora_att['col3']  ,
+                        'out_validity': ora_att['col6']  ,
+                        'check_in': current_att.check_in,
+                        'check_out': current_att.check_out,
+                        'att_date': current_att.att_date,
+                        'out_date':  ora_att['col4']  ,
+                        'in_date':  ora_att['col1']  ,
+                        'in_type_validity':  ora_att['col2']  ,
+                        'out_type_validity': ora_att['col5']  ,
+                    })    
+                elif ora_att['col3']=='valid':
+                    if current_att.check_in and current_att.check_out:
+                        att_vals = {
+                            'check_in': current_att.check_in,
+                            'att_date': current_att.check_in,
+                            'in_validity': 'valid'  ,
+                            'in_date':  ora_att['col4']  ,
+                            'in_type_validity': ora_att['col5']  ,
+                        }
+                        curr_att=request.env['hr.attendance'].sudo().create(att_vals)
+                        current_att.update({
+                            'in_validity': ora_att['col3']  ,
+                            'in_date':  ora_att['col1']  ,
+                            'in_type_validity':  ora_att['col2']  ,
+                            'check_in': False,
+                        })
+                    elif current_att.check_in:
+                        current_att.update({
+                            'in_validity': ora_att['col3'],
+                            'in_date': ora_att['col1'],
+                            'in_type_validity': ora_att['col2'],
+                        })
+                elif ora_att['col6']=='valid':
+                    if current_att.check_out and current_att.check_in:
+                        att_vals = {
+                            'check_in': current_att.check_out,
+                            'att_date': current_att.check_out,
+                            'in_validity': ora_att['col6']  ,
+                            'in_date':  ora_att['col4']  ,
+                            'in_type_validity': ora_att['col5']  ,
+                        }
+                        curr_att=request.env['hr.attendance'].create(att_vals)
+                        current_att.update({
+                            'out_validity': ora_att['col6']  ,
+                            'out_date':  ora_att['col4']  ,
+                            'out_type_validity': ora_att['col5']  ,
+                            'check_out': False,
+                        })
+                    elif current_att.check_out:
+                        current_att.update({
+                            'out_validity': ora_att['col6'],
+                            'out_date': ora_att['col4'],
+                            'out_type_validity': ora_att['col5'],
+                        })
+                        
+                
                 if ora_att['col2']=='out' and ora_att['col5']=='in':
                     pass
                 elif ora_att['col2']=='out':
@@ -694,15 +757,15 @@ class CustomerPortal(CustomerPortal):
         }
         date = fields.date.today() - timedelta(70)
         project_groups = request.env['hr.attendance'].search([('att_date','>=', date)])
-
         # default sort by value
         if not sortby:
             sortby = 'date'
         order = searchbar_sortings[sortby]['order']
-
         # default filter by value
         if not filterby:
             filterby = 'all'
+        if filterby == 'invalid':
+            filterby = 'invalid'
         domain = searchbar_filters.get(filterby, searchbar_filters.get('all'))['domain']
 #         domain = []
         if date_begin and date_end:
@@ -716,7 +779,8 @@ class CustomerPortal(CustomerPortal):
             if search_in in ('employee_id.name', 'Employee'):
                 search_domain = OR([search_domain, [('employee_id.name', 'ilike', search)]])
             domain += search_domain
-        domain += [('employee_id.user_id', '=', http.request.env.context.get('uid'))] 
+        domain += [('employee_id.user_id', '=', http.request.env.context.get('uid'))]
+        
         attendance_count = request.env['hr.attendance'].sudo().search_count(domain)
 
         pager = portal_pager(
@@ -733,8 +797,11 @@ class CustomerPortal(CustomerPortal):
 
         grouped_attendances = [project_groups]
         ora_att_date = fields.date.today() - timedelta(30)
-#         raise UserError(str(ora_att_date))
-        att_attendances = request.env['hr.attendance'].sudo().search([ ('employee_id.user_id', '=', http.request.env.context.get('uid') ), ('att_date','>=', ora_att_date ) ])        
+
+        if filterby == 'all':
+            att_attendances = request.env['hr.attendance'].sudo().search([ ('employee_id.user_id', '=', http.request.env.context.get('uid') ), ('att_date','>=', ora_att_date ),('in_validity','=','valid'), ('out_validity', '=', 'valid') ])
+        if  filterby == 'invalid': 
+            att_attendances = request.env['hr.attendance'].sudo().search([ ('employee_id.user_id', '=', http.request.env.context.get('uid') ), ('att_date','>=', ora_att_date ), '|',('in_validity','=','invalid'), ('out_validity', '=', 'invalid') ])
         paging(0,0,1)
         paging(grouped_attendances)
         

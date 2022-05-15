@@ -145,12 +145,6 @@
             <t t-call="portal.portal_searchbar">
                 <t t-set="title">Attendance</t>
             </t>
-            <t t-if="not grouped_attendances">
-                <div class="alert alert-warning mt8" role="alert">
-                    There are no Attendance.
-                </div>
-            </t>
-
                 <table class="table table-sm table-striped table-bordered"   id="oraattendanceTable">
 
                             <tr style='background-color:#875A7B; color:white;' >
