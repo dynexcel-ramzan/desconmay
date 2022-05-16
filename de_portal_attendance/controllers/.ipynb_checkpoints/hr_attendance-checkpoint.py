@@ -267,7 +267,26 @@ class CreateAttendance(http.Controller):
                             exist_current_att.update({
                                 'check_out': False,
                             })    
-                            
+                    else:
+                        if exist_current_att.check_in < current_att.check_in:
+                            exist_current_att.update({
+                                'check_out': current_att.check_in,
+                                'in_validity': 'valid',
+                                'out_validity': 'valid',
+                            })
+                            current_att.update({
+                                'check_in': False
+                            })
+                        elif exist_current_att.check_in > current_att.check_in:
+                            exist_current_att.update({
+                                'check_in': current_att.check_in,
+                                'check_out': exist_current_att.check_in,
+                                'in_validity': 'valid',
+                                'out_validity': 'valid',
+                            })  
+                            current_att.update({
+                                'check_in': False
+                            })
                         
                 elif ora_att['col5']=='in':
                     exist_current_att = request.env['hr.attendance'].sudo().search([('employee_id','=',current_att.employee_id.id),('att_date' ,'=', ora_att['col4'] ),('id','!=',current_att.id)], limit=1)
@@ -300,7 +319,26 @@ class CreateAttendance(http.Controller):
                             exist_current_att.update({
                                 'check_out': False,
                             })
-                                              
+                    else:
+                        if exist_current_att.check_in < current_att.check_out:
+                            exist_current_att.update({
+                                'check_out': current_att.check_out,
+                                'in_validity': 'valid',
+                                'out_validity': 'valid',
+                            })
+                            current_att.update({
+                                'check_out': False
+                            })
+                        elif exist_current_att.check_in > current_att.check_out:
+                            exist_current_att.update({
+                                'check_in': current_att.check_out,
+                                'check_out': exist_current_att.check_in,
+                                'in_validity': 'valid',
+                                'out_validity': 'valid',
+                            })  
+                            current_att.update({
+                                'check_out': False
+                            })                          
         emp_attendance = request.env['hr.attendance'].search([('employee_id.user_id','=', http.request.env.context.get('uid')),('att_date','>=', fields.date.today()-timedelta(30) )  ], order='check_in ASC')
         for emp_att in emp_attendance:
             if emp_att.in_validity=='valid':
