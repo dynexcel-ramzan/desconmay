@@ -19,14 +19,13 @@
                         </div>
                         <group>
                             <group>
-                              <field name="company_id" />
+                                <field name="location_code" />
+                                <field name="admin_id" />
                             </group>
-                            <group>
+                            <group>                               
+                               <field name="company_id" /> 
                             </group>
-                        </group>
-                        
-                       
-                        
+                        </group> 
                     </sheet>
                     <div class="oe_chatter">
                         <field name="message_follower_ids"
@@ -45,6 +44,7 @@
             <field name="arch" type="xml">
                 <tree string="Overtime Request">
                      <field name="name" />
+                     <field name="location_code" /> 
                      <field name="company_id" />
                 </tree>
             </field>

@@ -16,3 +16,4 @@ class HrWorkLocation(models.Model):
     name = fields.Char(string="Name" , required=True)
     company_id = fields.Many2one('res.company', string="Company", required=True)
     location_code = fields.Char(string='Location Code')
+    admin_id = fields.Many2one('hr.employee',  string='OT Admin')

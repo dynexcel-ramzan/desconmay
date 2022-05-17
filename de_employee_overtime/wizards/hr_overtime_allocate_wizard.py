@@ -17,9 +17,9 @@ class HrOvertimeAllocate(models.TransientModel):
     _name = 'hr.overtime.allocate'
     _description = 'Hr Overtime Allocate Wizard'
 
-    date_start = fields.Date(string='Date From')
-    date_end = fields.Date(string='Date To')
-    
+    date_start = fields.Date(string='Date From', required=True)
+    date_end = fields.Date(string='Date To', required=True)
+    employee_ids = fields.Many2many('hr.employee', string='Employees')
 
     
     
@@ -103,7 +103,7 @@ class HrOvertimeAllocate(models.TransientModel):
         
     def action_create_overtime(self):
         
-        attendances=self.env['hr.attendance'].search([('employee_id.allow_overtime','=',True),('is_overtime','=',False),('check_in','!=',False),('check_out','!=',False),('att_date','>=',self.date_start),('att_date','<=',self.date_end)])
+        attendances=self.env['hr.attendance'].search([('employee_id.allow_overtime','=',True),('is_overtime','=',False),('check_in','!=',False),('check_out','!=',False),('att_date','>=',self.date_start),('att_date','<=',self.date_end), ('employee_id.id', 'in' , self.employee_ids.ids) ])
         for att in attendances:
             day_min_ovt = 0
             overtime_rule = self.env['hr.overtime.rule'].search([('company_id','=',att.employee_id.company_id.id)])
@@ -164,7 +164,7 @@ class HrOvertimeAllocate(models.TransientModel):
                     'is_overtime': True
                 })
             else:
-                if overtime_limit > 0 and overtime_limit > day_min_ovt and att.employee_id.cpl==False:
+                if overtime_limit > 0 and overtime_limit > day_min_ovt:
                     vals = {
                             'employee_id': att.employee_id.id,
                             'company_id': att.employee_id.company_id.id,

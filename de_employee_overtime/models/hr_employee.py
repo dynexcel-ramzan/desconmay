@@ -12,7 +12,7 @@ class HrEmployee(models.Model):
      
     allow_overtime = fields.Boolean(string='OT Allowed', )
     work_location_id = fields.Many2one('hr.work.location', string="Work Location", domain="[('company_id','=',company_id)]")
-    cpl = fields.Boolean(string='CPL Gazetted/Rest Days')
+    cpl = fields.Boolean(string='CPL Gazetted/Rest Days', default=True)
 
 
     
