@@ -281,7 +281,7 @@
                                           <t t-foreach="request.env['hr.attendance.rectification'].search([ ('date','=',attendance.att_date),('employee_id','=',attendance.employee_id.id) ], limit=1)" t-as="att">
                                                 <t t-set="is_commitment_present" t-value='1'/>
                                                <t t-if='att.state=="submitted" '>
-                                                   Commitment Slip (To Approve)
+                                                   Comitment Slip(<span t-esc='att.partial'/>)
                                                </t>
                                             </t>
 

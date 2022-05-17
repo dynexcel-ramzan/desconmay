@@ -227,13 +227,12 @@ class CreateAttendance(http.Controller):
                         })
                     elif current_att.check_in and not current_att.check_out  and exist_current_att.check_in and not exist_current_att.check_out:
                         if exist_current_att.check_in < current_att.check_in:
-                            current_att.update({
-                                'check_in': exist_current_att.check_in,
+                            exist_current_att.update({
                                 'check_out':  current_att.check_in,
                                 'in_validity': 'valid',
                                 'out_validity': 'valid',
                             })
-                            exist_current_att.update({
+                            current_att.update({
                                 'check_in': False
                             })
                         elif exist_current_att.check_in > current_att.check_in:
@@ -274,6 +273,13 @@ class CreateAttendance(http.Controller):
                                 'in_validity': 'valid',
                                 'out_validity': 'valid',
                             })
+                            if exist_current_att.check_out:
+                                att_vals = {
+                                'check_in': exist_current_att.check_out,
+                                'att_date': exist_current_att.check_out,
+                                'in_validity': 'invalid'  ,
+                                }
+                                curr_att=request.env['hr.attendance'].sudo().create(att_vals)
                             current_att.update({
                                 'check_in': False
                             })
@@ -283,7 +289,14 @@ class CreateAttendance(http.Controller):
                                 'check_out': exist_current_att.check_in,
                                 'in_validity': 'valid',
                                 'out_validity': 'valid',
-                            })  
+                            })
+                            if exist_current_att.check_in:
+                                att_vals = {
+                                'check_in': exist_current_att.check_in,
+                                'att_date': exist_current_att.check_in,
+                                'in_validity': 'invalid'  ,
+                                }
+                                curr_att=request.env['hr.attendance'].sudo().create(att_vals)    
                             current_att.update({
                                 'check_in': False
                             })
@@ -326,6 +339,13 @@ class CreateAttendance(http.Controller):
                                 'in_validity': 'valid',
                                 'out_validity': 'valid',
                             })
+                            if exist_current_att.check_out:
+                                att_vals = {
+                                'check_in': exist_current_att.check_out,
+                                'att_date': exist_current_att.check_out,
+                                'in_validity': 'invalid'  ,
+                                }
+                                curr_att=request.env['hr.attendance'].sudo().create(att_vals)
                             current_att.update({
                                 'check_out': False
                             })
@@ -335,7 +355,14 @@ class CreateAttendance(http.Controller):
                                 'check_out': exist_current_att.check_in,
                                 'in_validity': 'valid',
                                 'out_validity': 'valid',
-                            })  
+                            })
+                            if exist_current_att.check_in:
+                                att_vals = {
+                                'check_in': exist_current_att.check_in,
+                                'att_date': exist_current_att.check_in,
+                                'in_validity': 'invalid'  ,
+                                }
+                                curr_att=request.env['hr.attendance'].sudo().create(att_vals)
                             current_att.update({
                                 'check_out': False
                             })                          
