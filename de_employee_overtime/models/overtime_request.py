@@ -52,28 +52,30 @@ class HrOverTime(models.Model):
         elif leave_period == 'full_day':
             leave_total_hours = shift.hours_per_day
         if leave_total_hours > 0: 
-            vals = {
-                'holiday_status_id': leave_type,
-                'employee_id': line.employee_id.id, 
-                'overtime_id': line.id,
-                'request_date': fields.date.today(),
-                'holiday_type': 'employee',
-                'allocation_type': 'regular',
-                'ovt_date': line.date,
-                'number_of_days_display': 1,
-                'number_of_days': 1,
-                'number_of_hours_calc': leave_total_hours,
-                'name':  "Allocation From Overtime Type "+str(line.overtime_type_id.name)+' ('+str(line.date.strftime("%d/%b/%y"))+')', 
+            leave_already_exist = self.env['hr.leave.allocation'].search([('employee_id','=',line.employee_id.id),('ovt_date','=',line.date)])
+            if not leave_already_exist:
+                vals = {
+                   'holiday_status_id': leave_type,
+                   'employee_id': line.employee_id.id, 
+                   'overtime_id': line.id,
+                   'request_date': fields.date.today(),
+                   'holiday_type': 'employee',
+                   'allocation_type': 'regular',
+                   'ovt_date': line.date,
+                   'number_of_days_display': 1,
+                   'number_of_days': 1,
+                   'number_of_hours_calc': leave_total_hours,
+                   'name':  "Allocation From Overtime Type "+str(line.overtime_type_id.name)+' ('+str(line.date.strftime("%d/%b/%y"))+')', 
                         }
-            timeoff = self.env['hr.leave.allocation'].create(vals)
-            if leave_period == 'half_day':
-                timeoff.update({
-               'number_of_days_display': 0.5,
-               'number_of_days': 0.5,
-               'number_of_hours_calc': leave_total_hours,
-               })
-            if timeoff.employee_id.parent_id:
-                timeoff.action_create_approval_request_allocation()
+                timeoff = self.env['hr.leave.allocation'].create(vals)
+                if leave_period == 'half_day':
+                    timeoff.update({
+                      'number_of_days_display': 0.5,
+                      'number_of_days': 0.5,
+                      'number_of_hours_calc': leave_total_hours,
+                    })
+                if timeoff.employee_id.parent_id:
+                    timeoff.action_create_approval_request_allocation()
     
     def action_submit(self):
         for line in self:
