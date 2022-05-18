@@ -178,7 +178,17 @@
                             <button type="submit" id="overtimeapp" class="btn btn-primary pull-left">Approve</button>
                             <span id="s_website_form_result"></span>
                         </div>
-                </form>  
+                </form>
+
+                  <form id="portal_overtime_refuse_form_line" data-toggle="validator" action="/overtime/refuse/line/save">
+                         <input type="hidden" id="date_to" class="form-control s_website_form_input" name="ovt_app_id" t-att-value="overtime.id"   />
+                           
+                         <div class="form-group col-12 s_website_form_submit" data-name="Submit Button">
+                            <div style="width: 200px;" class="s_website_form_label"></div>
+                            <button type="submit" id="overtimerefapp" class="btn btn-primary pull-left">Refuse</button>
+                            <span id="s_website_form_result"></span>
+                        </div>
+                  </form>  
             </t>   
             <br/>
             <br/>   
@@ -197,7 +207,7 @@
                         <t t-if="siteattendance">
                             <h1 class="text-center">Overtime Approval Done <a t-if="request.session.uid" t-attf-href="#">#<span t-field="siteattendance.id"/></a><t t-if="not request.session.get('uid')">#<span t-field="siteattendance.id"/></t>.</h1>
                         </t>
-                        <h1 class="text-center">Thank you for Approving your Site Overtime request!</h1>
+                        <h1 class="text-center">Thank you for Processing your Site Overtime request!</h1>
                     </div>
                 </div>
             </div>

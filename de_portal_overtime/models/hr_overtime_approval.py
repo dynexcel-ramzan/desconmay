@@ -156,8 +156,64 @@ class HrOvertimeApproval(models.Model):
         self.state = 'submitted'       
             
     def action_refuse(self):
-        self.state = 'refused'
-                
+        for ovt_app in self:
+            for ovt_line in self.overtime_line_ids:                
+                if ovt_line.normal_ot > 0:
+                    normal_ovt=self.env['hr.overtime.request'].sudo().search([('employee_id','=',ovt_line.employee_id.id),('date','>=',ovt_app.date_from),('date','<=',ovt_app.date_to),('state','=','approved'),('overtime_type_id.type','=','normal')]) 
+                    approve_ovt_hrs = 0
+                    remaining_hrs = 0
+                    for n_ovt in normal_ovt:
+                        approve_ovt_hrs += n_ovt.overtime_hours
+                        if approve_ovt_hrs <= ovt_line.normal_ot:    
+                            n_ovt.update({
+                                'state': 'draft',
+                            })    
+                        elif   approve_ovt_hrs >  ovt_line.normal_ot:
+                            remaining_hrs = approve_ovt_hrs - ovt_line.normal_ot
+                            forcast_hrs =  n_ovt.overtime_hours -  remaining_hrs
+                            if forcast_hrs > 0:
+                                n_ovt.update({
+                                'state': 'draft',
+                                'overtime_hours': forcast_hrs,
+                                })                        
+                if ovt_line.rest_day_ot > 0:
+                    rest_day_ovt=self.env['hr.overtime.request'].sudo().search([('employee_id','=',ovt_line.employee_id.id),('date','>=',ovt_app.date_from),('date','<=',ovt_app.date_to),('state','=','approved'),('overtime_type_id.type','=','rest_day')])
+                    rest_d_approve_ovt_hrs = 0
+                    rest_d_remaining_hrs = 0
+                    for r_ovt in rest_day_ovt:
+                        rest_d_approve_ovt_hrs += r_ovt.overtime_hours
+                        if rest_d_approve_ovt_hrs <= ovt_line.rest_day_ot:    
+                            r_ovt.update({
+                                'state': 'draft',
+                            })                            
+                        elif   rest_d_approve_ovt_hrs >  ovt_line.rest_day_ot:
+                            rest_d_remaining_hrs = rest_d_approve_ovt_hrs - ovt_line.rest_day_ot
+                            rest_d_forcast_hrs =  r_ovt.overtime_hours -  rest_d_remaining_hrs
+                            if rest_d_forcast_hrs > 0:
+                                r_ovt.update({
+                                'state': 'draft',
+                                })                    
+                if ovt_line.gazetted_ot > 0:
+                    gazetted_day_ovt=self.env['hr.overtime.request'].sudo().search([('employee_id','=',ovt_line.employee_id.id),('date','>=',ovt_app.date_from),('date','<=',ovt_app.date_to),('state','=','approved'),('overtime_type_id.type','=','gazetted')])
+                    gazetted_d_approve_ovt_hrs = 0
+                    gazetted_d_remaining_hrs = 0
+                    for gazetted_ovt in gazetted_day_ovt:
+                        gazetted_d_approve_ovt_hrs += gazetted_ovt.overtime_hours
+                        if gazetted_d_approve_ovt_hrs <= ovt_line.gazetted_ot:    
+                            gazetted_ovt.update({
+                                'state': 'draft',
+                            })
+                            gazetted_ovt.action_approve()
+                        elif   gazetted_d_approve_ovt_hrs >  ovt_line.gazetted_ot:
+                            gazetted_d_remaining_hrs = gazetted_d_approve_ovt_hrs - ovt_line.gazetted_ot
+                            gazetted_d_forcast_hrs =  gazetted_ovt.overtime_hours -  gazetted_d_remaining_hrs
+                            if gazetted_d_forcast_hrs > 0:
+                                gazetted_ovt.update({
+                                'state': 'draft',
+                                })    
+            ovt_app.state = 'refused'
+        
+        
     def action_reset(self):
         self.state = 'draft'
 

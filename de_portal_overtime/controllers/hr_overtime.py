@@ -45,7 +45,14 @@ class CreateAttendance(http.Controller):
         overtime_approval=request.env['hr.overtime.approval'].sudo().search([('id','=',record_id)]) 
         overtime_approval.action_approve()
         return request.render("de_portal_overtime.overtime_approve_submited", {})
+
+    @http.route('/overtime/refuse/line/save',type="http", website=True, auth='user')
+    def action_refuse_overtime_template(self, **kw):
+        overtime_refuse=request.env['hr.overtime.approval'].sudo().search([('id','=',kw.get('ovt_app_id'))]) 
+        overtime_refuse.action_refuse()
+        return request.render("de_portal_overtime.overtime_approve_submited", {})        
       
+
 class CustomerPortal(CustomerPortal):
 
 

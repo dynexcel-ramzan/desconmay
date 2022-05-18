@@ -32,6 +32,9 @@ class HrOvertimeRequest(models.Model):
             subordinates_overtime_list = []
             employee_list = self.env['hr.employee'].search([('work_location_id','=', uniq_list)])
             for emp in employee_list:
+                draft_overtime_reconcile=self.env['hr.overtime.request'].sudo().search([('employee_id','=',emp.id),('date','>=',date_from ),('date','<=',to_date),('state','=','draft')])
+                if draft_overtime_reconcile:
+                    raise UserError('Their are some Overtime Request which are available in Draft state for this Location. '+str(emp.work_location_id.name)+' Before Sending Approval, Please submit or Cancel It.') 
                 empexist = self.env['hr.employee'].search([('id','=',emp.id)], limit=1) 
                 loc = self.env['hr.work.location'].search([('id','=',uniq_list)], limit=1)
                 normal_overtime_total = 0
@@ -40,6 +43,8 @@ class HrOvertimeRequest(models.Model):
                 evertime_type_list = []
                 overtime_reconcile=self.env['hr.overtime.request'].sudo().search([('employee_id','=',emp.id),('date','>=',date_from ),('date','<=',to_date),('state','=','to_approve')])
                 for ovt in overtime_reconcile:
+                    if ovt.overtime_hours > 4 and ovt.remarks=='':
+                        raise UserError('Please Enter remarks for all Overtime Request which have Feeded Hours more than 4 Hours!')
                     evertime_type_list.append(ovt.overtime_type_id.id) 
                 uniq_overtime_type_list = set(evertime_type_list) 
                 for uniq_ovt in uniq_overtime_type_list:
