@@ -212,11 +212,9 @@ class CreateAttendance(http.Controller):
                             'out_date': ora_att['col4'],
                             'out_type_validity': ora_att['col5'],
                         })
-                        
-                
                 if ora_att['col2']=='out' and ora_att['col5']=='in':
                     pass
-                elif ora_att['col2']=='out':
+                if ora_att['col2']=='out':
                     exist_current_att = request.env['hr.attendance'].sudo().search([('employee_id' ,'=', current_att.employee_id.id),('id','!=', current_att.id),('att_date' ,'=', ora_att['col1'] )], order='check_in DESC' , limit=1)
                     if not exist_current_att and current_att.check_in:
                         current_att.update({
@@ -301,7 +299,7 @@ class CreateAttendance(http.Controller):
                                 'check_in': False
                             })
                         
-                elif ora_att['col5']=='in':
+                if ora_att['col5']=='in':
                     exist_current_att = request.env['hr.attendance'].sudo().search([('employee_id','=',current_att.employee_id.id),('att_date' ,'=', ora_att['col4'] ),('id','!=',current_att.id)], limit=1)
                     if  not exist_current_att and current_att.check_out:
                         current_att.update({
@@ -321,7 +319,6 @@ class CreateAttendance(http.Controller):
                                 'check_in': False
                             })
                     elif current_att.check_out and not current_att.check_in  and not exist_current_att.check_in and exist_current_att.check_out:
-                        
                         if current_att.check_out < exist_current_att.check_out:
                             current_att.update({
                                 'check_in': current_att.check_out,
