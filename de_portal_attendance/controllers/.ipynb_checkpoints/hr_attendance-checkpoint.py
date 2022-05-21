@@ -767,8 +767,8 @@ class CustomerPortal(CustomerPortal):
         }
                                                 
         searchbar_filters = {
-            'all': {'label': _('Valid'), 'domain': [('in_validity' ,'=', 'valid')]},
-            'invalid': {'label': _('In-Valid'), 'domain': [('in_validity' ,'=', 'invalid')]},
+            'all': {'label': _('Valid'), 'domain': []},
+            'invalid': {'label': _('In-Valid'), 'domain': []},
         }
            
         searchbar_inputs = {
