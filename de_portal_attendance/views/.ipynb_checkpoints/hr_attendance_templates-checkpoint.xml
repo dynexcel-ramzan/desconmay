@@ -284,9 +284,11 @@
                                                    Comitment Slip(<span t-esc='att.partial'/>)
                                                </t>
                                             </t>
-
-                                           <t t-if='is_commitment_present==0'>
-                                             <a t-attf-href="/hr/attendance/rectify/#{attendance.id}?" title="Rectify"><div class="btn btn-warning"><i class="fa fa-wrench"></i></div></a>
+                                           
+                                              <t t-if='is_commitment_present==0'>
+                                               <t t-if = "attendance.worked_hours == 0">   
+                                                 <a t-attf-href="/hr/attendance/rectify/#{attendance.id}?" title="Rectify"><div class="btn btn-warning"><i class="fa fa-wrench"></i></div></a>
+                                              </t>
                                            </t>
                                            </t>
                                     </td>
