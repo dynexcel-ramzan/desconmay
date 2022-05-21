@@ -149,13 +149,13 @@
 
                             <tr style='background-color:#875A7B; color:white;' >
                                 <th class="text-left">Check In</th>
-                                <th class="text-left">In Date</th>
-                                <th class="text-left">In Type</th>
-                                <th class="text-left">In Validity</th>
+                                <th class="text-left">Attendance Date</th>
+                                <th class="text-left">IN/OUT</th>
+                                <th class="text-left">Valid</th>
                                 <th class="text-left">Check Out</th>
-                                <th class="text-left">Out Date</th>
-                                <th class="text-left">Out Type</th>
-                                <th class="text-left">Out Validity</th>
+                                <th class="text-left">Attendance Date</th>
+                                <th class="text-left">IN/OUT</th>
+                                <th class="text-left">Valid</th>
                                 <th class="text-left">Worked Hours</th>
                                 <th class="text-left">Action</th>
 
@@ -169,24 +169,45 @@
                                     </td>
 
                                     <td class="in_date">
+                                        <t t-if="attendance.check_in">
                                         <input type="date" class="form-control s_website_form_input" name="in_date" id="in_date"   t-att-value="attendance.att_date"/>
+                                        </t>
+                                        <t t-if="not attendance.check_in">
+                                        <input type="hidden" class="form-control s_website_form_input" name="in_date" id="in_date"   t-att-value="attendance.att_date"/>
+                                        </t>
                                     </td>
 
                                      <td class="in_type_validity">
-                                       <select  id="in_type_validity" class="form-control  s_website_form_input" name="in_type_validity" >
-                                        <option value="in">
-                                           In
-                                        </option>
-                                        <option value="out">
-                                           Out
-                                        </option>
+                                         <t t-if="attendance.check_in">
+                                             <select  id="in_type_validity" class="form-control  s_website_form_input" name="in_type_validity" >
+                                                <option value="in">
+                                                   In
+                                                </option>
+                                                <option value="out">
+                                                   Out
+                                                </option>
 
-                                      </select>
+                                             </select>
+                                         </t>
+                                         <t t-if="not attendance.check_in">
+                                             <select  id="in_type_validity" class="form-control  s_website_form_input" name="in_type_validity" >
+                                                <option value="in">
+                                                   In
+                                                </option>
 
+                                             </select>
+                                         </t>    
                                      </td>
 
                                     <td class="in_validity">
-
+                                         <t t-if="not attendance.check_in">
+                                            <select  id="in_validity" class="form-control  s_website_form_input" name="in_validity" > 
+                                             <option value="valid">
+                                                 Valid
+                                               </option>
+                                            </select>     
+                                        </t>
+                                      <t t-if="attendance.check_in">
                                        <select  id="in_validity" class="form-control  s_website_form_input" name="in_validity" >
                                            <t t-if="attendance.in_validity=='invalid'">
                                                <option value="invalid">
@@ -205,12 +226,13 @@
                                                </option>
                                            </t>
                                       </select>
-
+                                      </t>
+                                           
                                      </td>
 
                                     <td class="check_out">
                                         <t t-if="attendance.check_out">
-                                           <span t-esc="attendance.check_out"  t-options='{"widget": "datetime"}' />                                                     </t>
+                                           <span t-esc="attendance.check_out"  t-options='{"widget": "datetime"}' />                                               </t>
                                     </td>
 
                                     <td class="out_date">

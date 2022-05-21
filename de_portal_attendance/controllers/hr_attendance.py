@@ -94,8 +94,57 @@ class CreateAttendance(http.Controller):
                 if str(current_att.att_date - timedelta(1)) > ora_att['col1']: 
                     raise UserError('You are not allow to select In Date less than '+str(current_att.att_date - timedelta(1)))  
                 if str(current_att.att_date + timedelta(1)) < ora_att['col1']: 
-                    raise UserError('You are not allow to select In Date Greater than '+str(current_att.att_date + timedelta(1)))   
+                    raise UserError('You are not allow to select In Date Greater than '+str(current_att.att_date + timedelta(1)))  
+                    
+                """
+                  Attendance Date Updation
+                """    
                 
+                if ora_att['col1'] != str(current_att.att_date):
+                    exist_att_out = request.env['hr.attendance'].search([('employee_id','=',current_att.employee_id.id),('att_date','=',ora_att['col1']),('id' ,'!=', current_att.id),('check_in','=',False)], order='check_out DESC',  limit=1)
+                    exist_att_in = request.env['hr.attendance'].search([('employee_id','=',current_att.employee_id.id),('att_date','=',ora_att['col1']),('id' ,'!=', current_att.id),('check_out','=',False)], order='check_in ASC',  limit=1)
+                    if exist_att_out:
+                        
+                        if str(exist_att_out.check_out) > str(current_att.check_in) and not current_att.check_out:
+                            
+                            exist_att_out.update({
+                                'check_in': current_att.check_in,
+                               
+                            })
+                            current_att.update({
+                                'check_in': False
+                            })
+                    elif  exist_att_in:       
+                        if str(exist_att_in.check_in) > str(current_att.check_in) and current_att.check_in and  not current_att.check_out:
+                            exist_att_in.update({
+                                'check_in': current_att.check_in,
+                                'check_out': exist_att_in.check_in,
+                            })
+                            current_att.update({
+                                'check_in': False
+                            })
+                    
+                if ora_att['col4'] != current_att.att_date: 
+                    exist_att_out = request.env['hr.attendance'].search([('employee_id','=',current_att.employee_id.id),('att_date','=',ora_att['col4']),('id' ,'!=', current_att.id),('check_in','=',False),('check_out','!=', False)], order='check_out DESC',  limit=1)
+                    exist_att_in = request.env['hr.attendance'].search([('employee_id','=',current_att.employee_id.id),('att_date','=',ora_att['col4']),('id' ,'!=', current_att.id),('check_out','=',False),('check_in','!=', False)], order='check_in ASC',  limit=1)
+                    if exist_att_out:
+                        if str(exist_att_out.check_out) < str(current_att.check_out) and not current_att.check_in:
+                            exist_att_out.update({
+                                'check_in': exist_att_out.check_out,
+                                'check_out': current_att.check_out,
+                            })
+                            current_att.update({
+                                'check_out': False
+                            })
+                    elif exist_att_in:        
+                        if str(exist_att_in.check_in) < str(current_att.check_out) and not current_att.check_in:
+                            exist_att_in.update({
+                                'check_in': exist_att_in.check_in,
+                                'check_out': current_att.check_out,
+                            })
+                            current_att.update({
+                                'check_out': False
+                            })    
                 """
                    Unnecessary Attendance present in odoo
                 """
@@ -213,7 +262,15 @@ class CreateAttendance(http.Controller):
                             'out_type_validity': ora_att['col5'],
                         })
                 if ora_att['col2']=='out' and ora_att['col5']=='in':
-                    pass
+                    att_vals = {
+                        'check_in': current_att.check_out,
+                        'att_date': current_att.check_out,
+                        'in_validity': 'invalid'  ,
+                        }
+                    curr_att=request.env['hr.attendance'].sudo().create(att_vals)  
+                    current_att.update({
+                        'check_out': False,
+                    })
                 if ora_att['col2']=='out':
                     exist_current_att = request.env['hr.attendance'].sudo().search([('employee_id' ,'=', current_att.employee_id.id),('id','!=', current_att.id),('att_date' ,'=', ora_att['col1'] )], order='check_in DESC' , limit=1)
                     if not exist_current_att and current_att.check_in:
@@ -390,6 +447,9 @@ class CreateAttendance(http.Controller):
                 emp_att.unlink()
                 
         return request.redirect('/hr/attendances')
+    
+    
+    #==============================
     
     
     @http.route('/hr/attendance/rectify/save', type="http", auth="public", website=True)
