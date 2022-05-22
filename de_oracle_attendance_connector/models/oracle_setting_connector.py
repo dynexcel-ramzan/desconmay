@@ -108,13 +108,21 @@ class OracleSettingConnector(models.Model):
                     'is_attedance_created': True,
                 })
             elif yesterday_att and shift.shift_type=='night':
-                
-                yesterday_att.update({
-                    'check_out': u_att.timestamp,
-                })
-                u_att.update({
-                    'is_attedance_created': True,
-                })
+                if shift.attendance_date_type=='out_time':                    
+                    yesterday_att.update({
+                        'check_out': u_att.timestamp,
+                        'att_date': u_att.timestamp,
+                    })
+                    u_att.update({
+                        'is_attedance_created': True,
+                    })
+                else:                    
+                    yesterday_att.update({
+                        'check_out': u_att.timestamp,
+                    })
+                    u_att.update({
+                        'is_attedance_created': True,
+                    })
             else:
                 att_vals = {
                     'employee_id': u_att.employee_id.id,
