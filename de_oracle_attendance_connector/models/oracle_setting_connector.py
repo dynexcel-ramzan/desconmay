@@ -108,6 +108,7 @@ class OracleSettingConnector(models.Model):
                     'is_attedance_created': True,
                 })
             elif yesterday_att and shift.shift_type=='night':
+                
                 yesterday_att.update({
                     'check_out': u_att.timestamp,
                 })

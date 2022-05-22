@@ -21,18 +21,19 @@
     'version': '14.0.0.2',
 
     # any module necessary for this one to work correctly
-    'depends': ['base','hr_attendance','de_employee_enhancement'],
+    'depends': ['base','hr_attendance','de_employee_enhancement','de_employee_shift'],
 
     # always loaded
     'data': [
          'data/scheduler_data.xml',
          'security/security.xml',
          'views/hr_user_attendance_views.xml',
-         'views/hr_employee_views.xml',
-         'wizard/hr_attendance_wizard.xml',      
-        'security/ir.model.access.csv',
-        'views/hr_attendance_views.xml',
-        'views/oracle_setting_connector_views.xml',
+         'wizard/hr_attendance_wizard.xml',
+         'views/resource_calendar_views.xml',
+         'security/ir.model.access.csv',
+         'views/hr_attendance_views.xml',
+         'views/hr_employee_views.xml', 
+         'views/oracle_setting_connector_views.xml',
          'views/hr_device_views.xml',
     ],
     # only loaded in demonstration mode
