@@ -7,6 +7,15 @@ class HrAttendance(models.Model):
     _inherit = 'hr.attendance' 
     
     
+    is_portal_modify = fields.Boolean(string='Modification')
+    modify_type = fields.Selection(selection=[
+            ('in', 'in'),
+            ('out', 'out'),
+        ], string='Modify Type',
+        )
+    
+    
+    
     in_validity = fields.Selection(selection=[
             ('valid', 'Valid'),
             ('invalid', 'In-Valid'),
