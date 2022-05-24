@@ -112,7 +112,7 @@ class CreateAttendance(http.Controller):
                     current_att.update({
                         'check_in': False,
                     })
-                if ora_att['col4'] != current_att.att_date:                    
+                if ora_att['col4'] != str(current_att.att_date):
                     att_vals = {
                         'check_in': current_att.check_out,
                         'att_date': ora_att['col4'],
@@ -285,7 +285,6 @@ class CreateAttendance(http.Controller):
                             'check_out': False,
                         })
                     elif today_att_out:
-                        
                         if str(emp_att.check_in) > str(today_att_out.check_in): 
                             emp_att.update({
                                 'check_in': today_att_out.check_in,
