@@ -4,10 +4,9 @@
 from operator import itemgetter
 
 from markupsafe import Markup
-
+from datetime import datetime , date
 from odoo import fields, http, SUPERUSER_ID, _
 from odoo.exceptions import AccessError, MissingError, UserError, ValidationError
-
 from odoo.http import request
 from odoo.tools.translate import _
 from odoo.tools import groupby as groupbyelem
@@ -41,10 +40,6 @@ class CustomerPortal(portal.CustomerPortal):
         if not sortby:
             sortby = 'name'
         order = searchbar_sortings[sortby]['order']
-
-        #if date_begin and date_end:
-        #    domain += [('create_date', '>', date_begin), ('create_date', '<=', date_end)]
-
         # Timesheet Report count
         timesheet_report_count = Sheet.search_count(domain)
         # pager
@@ -55,7 +50,6 @@ class CustomerPortal(portal.CustomerPortal):
             page=page,
             step=self._items_per_page
         )
-
         # content according to pager and archive selected
         sheets = Sheet.search(domain, order=order, limit=self._items_per_page, offset=pager['offset'])
         request.session['my_report_timesheets_history'] = sheets.ids[:100]
@@ -68,8 +62,6 @@ class CustomerPortal(portal.CustomerPortal):
                 'id': project.id
             })
         values['project_list'] = project_list
-        
-
         values.update({
             #'date': date_begin,
             #'date_end': date_end,
@@ -113,29 +105,9 @@ class CustomerPortal(portal.CustomerPortal):
             'token': access_token,
             'return_url': '/shop/payment/validate',
             'bootstrap_formatting': True,
-        #    'partner_id': order.partner_id.id,
             'report_type': 'html',
-            #'action': order._get_portal_return_action(),
         }
-        #if order.company_id:
-        #    values['res_company'] = order.company_id
-
-        #if order.has_to_be_paid():
-        #    domain = expression.AND([
-        #        ['&', ('state', 'in', ['enabled', 'test']), ('company_id', '=', order.company_id.id)],
-        #        ['|', ('country_ids', '=', False), ('country_ids', 'in', [order.partner_id.country_id.id])]
-        #    ])
-        #    acquirers = request.env['payment.acquirer'].sudo().search(domain)
-
-        #    values['acquirers'] = acquirers.filtered(lambda acq: (acq.payment_flow == 'form' and acq.view_template_id) or
-        #                                             (acq.payment_flow == 's2s' and acq.registration_view_template_id))
-        #    values['pms'] = request.env['payment.token'].search([('partner_id', '=', order.partner_id.id)])
-        #    values['acq_extra_fees'] = acquirers.get_acquirer_extra_fees(order.amount_total, order.currency_id, order.partner_id.country_id.id)
-
-        #if order.state in ('draft', 'sent', 'cancel'):
         history = request.session.get('my_timelogs_history', [])
-        #else:
-        #    history = request.session.get('my_orders_history', [])
         values.update(get_records_pager(history, sheet))
 
         return values
@@ -147,18 +119,9 @@ class CustomerPortal(portal.CustomerPortal):
         '''
         This method provides fields related to the project to render the website sale form
         '''
-        
-        #values = render_values['portal_timesheet_page']
-        
-        #project = request.env['project.project'].browse(int(values['project_id']))
-        #project = project and project.exists()
         projects = request.env['project.project'].search([])
         type_ids = request.env['hr.timesheet.type'].sudo().search([])
-        
-        
-
         res = {
-            #'project': project,
             'task_ids': projects.get_website_sale_tasks(),
             'projects': projects.get_website_sale_projects(),
             'type_ids': type_ids,
@@ -170,7 +133,6 @@ class CustomerPortal(portal.CustomerPortal):
     def portal_timesheet_page(self, sheet_id=None, access_token=None, message=False, download=False, **kw):
 
         try:
-            #sheet_sudo = self._document_check_access('hr.timesheet.sheet', sheet_id, access_token=access_token)
             sheet_sudo = request.env['hr.timesheet.sheet'].sudo().search([('id', '=', int(sheet_id))])
         except (AccessError, MissingError):
             return request.redirect('/my')
@@ -192,15 +154,10 @@ class CustomerPortal(portal.CustomerPortal):
                     token=sheet_sudo.access_token,
                     message_type="notification",
                     subtype_xmlid="mail.mt_note",
-                    #partner_ids=sheet_sudo.user_id.sudo().partner_id.ids,
                 )
         
         values = self._sheet_get_page_view_values(sheet_sudo, access_token, **kw)
-        
-        
         render_values = {
-            #'project_id': project_id,
-            #'error': errors,
             'callback': kw.get('callback'),
         }
         values.update(self._get_project_task_render_values(kw, render_values))
@@ -232,14 +189,13 @@ class CustomerPortal(portal.CustomerPortal):
     # --------------------------------------------
     @http.route([
         '/my/timelog/submit/<int:sheet_id>',
-        #'/my/timelog/delete/<int:timesheet_id>/<access_token>',
     ], type='http', auth="public", website=True)
     def sheet_submit(self, sheet_id=None, access_token=None, **kw):
         try:
             sheet_sudo = self._document_check_access('hr.timesheet.sheet', sheet_id, access_token)
         except (AccessError, MissingError):
             return request.redirect('/my')
-        #sheet = request.env['hr.timesheet.sheet'].sudo().browse(int(sheet_id))
+
         if sheet_sudo:
             sheet_sudo.sudo().action_submit_sheet()
         return request.redirect('/my/timelog/%s' % (sheet_sudo.id))
@@ -274,16 +230,7 @@ class CustomerPortal(portal.CustomerPortal):
             sheet_sudo = self._document_check_access('hr.timesheet.sheet', sheet_id, access_token)
         except (AccessError, MissingError):
             return request.redirect('/my')
-
-        #if not sheet_sudo.team_id.allow_portal_ticket_closing:
-        #    raise UserError(_("The team does not allow ticket closing through portal"))
-
-        #if not ticket_sudo.closed_by_partner:
-        #    closing_stage = ticket_sudo.team_id._get_closing_stage()
-        #    if ticket_sudo.stage_id != closing_stage:s
-        #        ticket_sudo.write({'stage_id': closing_stage[0].id, 'closed_by_partner': True})
-        #    else:
-        #sheet_sudo.write({'stage_id': 4})
+        
         body = _('request rejected')
         sheet_sudo.with_context(mail_create_nosubscribe=True).message_post(body=body, message_type='comment', subtype_xmlid='mail.mt_note')
         
@@ -324,46 +271,16 @@ class CustomerPortal(portal.CustomerPortal):
 
         return request.redirect('/my/timelog/%s' % (sheet_id))
     
-    # ------------------------
-    # Delete  request
-    # ------------------------
-    #@http.route(['/action/delete/line/<int:line_id>'], type='http', auth="public", website=True)
-    #def action_stock_delete_line(self, line_id , access_token=None, **kw): 
-    #    recrd = request.env['stock.transfer.order.line'].sudo().browse(line_id)
-    #    material_id = recrd.stock_transfer_order_id.id
-    #    task_sudo = request.env['stock.transfer.order'].sudo().search([('id', '=', material_id)])
-    #    recrd.unlink()
-    #    values = self._stock_material_get_page_view_values(task_sudo, access_token, **kw)
-    #    return request.render("de_portal_stock_material_transfer.portal_stock_material", values)
+
     
     @http.route([
         '/my/timelog/delete/<int:timesheet_id>',
-        #'/my/timelog/delete/<int:timesheet_id>/<access_token>',
     ], type='http', auth="public", website=True)
     def timesheet_delete(self, timesheet_id=None, access_token=None, **kw):
-        #try:
-        #    sheet_sudo = self._document_check_access('hr.timesheet.sheet', sheet_id, access_token)
-        #except (AccessError, MissingError):
-        #    return request.redirect('/my')
-        
         timesheet = request.env['account.analytic.line'].sudo().browse(int(timesheet_id))
         if timesheet:
             sheet_sudo = request.env['hr.timesheet.sheet'].sudo().search([('id', '=', int(timesheet.sheet_id.id))],limit=1)
             timesheet.sudo().unlink()
-        
-
-        #raise ValidationError(_(timesheet.id))
-        
-        #timesheet.action_delete()
-        
-        #timesheet_id = kw.get('timesheet_id')
-        #raise ValidationError(_(timesheet))
-        #if timesheet_id:
-        #    timesheet = request.env['account.analytic.line'].sudo().search([('id','=',int(timesheet_id))],limit=1)
-        #    timesheet.action_delete()
-            #timesheet.unlink()
-        #values = self._sheet_get_page_view_values(sheet_sudo, access_token, **kw)
-        #return request.render('de_timesheet_portal.portal_my_timelog', values)
         return request.redirect('/my/timelog/%s' % (sheet_sudo.id))
     
     @http.route([
@@ -381,39 +298,22 @@ class CustomerPortal(portal.CustomerPortal):
     
     @http.route([
         '/my/timelog/add/line',
-        #'/my/timelog/add/line/<int:sheet_id>',
-        #'/my/timelog/add/line/<int:sheet_id>/<access_token>',
     ], type='http', auth="public", website=True)
-    #@http.route('/my/timelog/add/line/<int:timesheet_id>', type='http', csrf=False, auth="public", website=True)
     def timesheet_add_line(self, **kw):
-        #sheet = request.env['hr.timesheet.sheet'].sudo().search([('id', '=', int(sheet_id))],limit=1)
-        #sheet = request.env['hr.timesheet.sheet'].sudo().browse(int(sheet_id))
         sheet = request.env['hr.timesheet.sheet'].sudo().browse(int(kw.get('sheet_id')),)
         vals = {}
-        if kw.get('vals'):
-            for line in kw.get('vals'):
-                vals = {
-                    'sheet_id': sheet.id,
-                    'project_id': int(line['project_id']),
-                    'task_id': int(line['task_id']),
-                    'name': line['name'] or 'this is test',
-                    #'product_uom_qty': int(line['sheet_id']),
-                    'unit_amount_from': int(line['unit_amount_from']),
-                    'unit_amount_to': int(line['unit_amount_to']),
-                    'unit_amount': int(line['unit_amount_to'])-int(line['unit_amount_from']),
-                    'date': fields.date.today(),
-                    'employee_id': sheet.employee_id.id
-                }
+        time_from = datetime.strptime(kw.get('unit_amount_from'), '%H:%M')
+        time_to = datetime.strptime(kw.get('unit_amount_to'), '%H:%M')
+        unit_time_from = str(time_from.hour)+'.'+ str(time_from.minute)
+        unit_time_to = str(time_to.hour)+'.'+ str(time_to.minute)
         vals = {
             'sheet_id': sheet.id,
             'project_id': int(kw.get('project_id')),
-            #'task_id': int(kw.get('task_id')),
             'timesheet_type_id': int(kw.get('task_id')),
             'name': kw.get('name'),
-            #'product_uom_qty': int(line['sheet_id']),
-            'unit_amount_from': float(kw.get('unit_amount_from')),
-            'unit_amount_to': float(kw.get('unit_amount_to')),
-            'unit_amount': float(kw.get('unit_amount_to')) - float(kw.get('unit_amount_from')),
+            'unit_amount_from': float(unit_time_from),
+            'unit_amount_to': float(unit_time_to),
+            'unit_amount': float(unit_time_to) - float(unit_time_from),
             'date': kw.get('date'),
             'employee_id': sheet.employee_id.id
         }

@@ -2,7 +2,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 import re
-from odoo import api, fields, Command, models, _
+from odoo import api, fields, models, _
 from odoo.exceptions import UserError, ValidationError
 from odoo.tools import email_split, float_is_zero, float_repr
 from odoo.tools.misc import clean_context, format_date
@@ -21,8 +21,6 @@ class HRTimesheetSheetType(models.Model):
     sequence = fields.Integer(default=1, required=True)
     
     department_id = fields.Many2one('hr.department', copy=True, string="Department")
-    #category_ids = fields.Many2many('hr.employee.category', copy=True, string='Tags')
-
     
     stage_category = fields.Selection([
         ('draft', 'Draft'),
@@ -75,7 +73,6 @@ class HRTimesheetSheet(models.Model):
     
     employee_id = fields.Many2one('hr.employee', "Employee", domain=_domain_employee_id, required=True, context={'active_test': False}, states=READONLY_STATES,)
     department_id = fields.Many2one('hr.department', compute='_compute_from_employee_id', readonly=True, copy=True, string="Department")
-    #category_ids = fields.Many2many('hr.employee.category', 'employee_category_rel','employee_id', 'category_id', groups="hr.group_hr_manager", string='Tags', compute='_compute_from_employee_id', readonly=True)
 
     company_id = fields.Many2one('res.company', string='Company', required=True, readonly=True, default=lambda self: self.env.company)
 
@@ -91,8 +88,6 @@ class HRTimesheetSheet(models.Model):
     diff_hours = fields.Float(string='Diff. Hours', compute='_compute_all_hours', store=True, states=READONLY_STATES)
     
     timesheets_report_count = fields.Integer(compute='_compute_timesheets_report_count')
-    
-    #stage_id = fields.Many2one('hr.timesheet.sheet.type', string='Stage', readonly=False, ondelete='restrict', tracking=True, index=True, copy=False, store=True, compute="_compute_stage_id", default=_get_default_stage_id)
     
     state = fields.Selection([
         ('draft', 'To Submit'),
@@ -119,7 +114,7 @@ class HRTimesheetSheet(models.Model):
     def _compute_from_employee_id(self):
         for sheet in self:
             sheet.department_id = sheet.employee_id.department_id
-            #sheet.category_ids = sheet.employee_id.category_ids
+
             
     def _compute_stage_id(self):
         for sheet in self:
@@ -128,7 +123,6 @@ class HRTimesheetSheet(models.Model):
     def stage_find(self, domain=[], order='sequence'):
         
         search_domain = []
-        # collect all section_ids
         search_domain += list(domain)
         return self.env['hr.timesheet.sheet.type'].search(search_domain, order=order, limit=1).id
     
@@ -137,16 +131,28 @@ class HRTimesheetSheet(models.Model):
         for ts in self:
             pln_hrs = 0
             tot_hrs = 0
+            date_list = []
+            loop_count = 0
             for line in ts.timesheet_line_ids:
-                shift_schedule_line = self.env['hr.shift.schedule.line'].search([('employee_id','=',ts.employee_id.id),('date','=',line.date),('state','=','posted')], limit=1)
-                pln_hrs += shift_schedule_line.first_shift_id.hours_per_day
-                if shift_schedule_line.second_shift_id:
-                    pln_hrs += shift_schedule_line.second_shift_id.hours_per_day    
-                tot_hrs += line.unit_amount
-                
+                loop_count += 1
+                if loop_count==1:
+                    shift_schedule_line = self.env['hr.shift.schedule.line'].sudo().search([('employee_id','=',ts.employee_id.id),('date','=',line.date),('state','=','posted')], limit=1)
+                    date_list.append(line.date)
+                    pln_hrs += shift_schedule_line.first_shift_id.hours_per_day
+                    if shift_schedule_line.second_shift_id:
+                        pln_hrs += shift_schedule_line.second_shift_id.hours_per_day    
+                for ext_date in date_list:
+                    if ext_date!=str(line.date):
+                        shift_schedule_line = self.env['hr.shift.schedule.line'].sudo().search([('employee_id','=',ts.employee_id.id),('date','=',line.date),('state','=','posted')], limit=1)
+                        date_list.append(line.date)
+                        pln_hrs += shift_schedule_line.first_shift_id.hours_per_day
+                        if shift_schedule_line.second_shift_id:
+                            pln_hrs += shift_schedule_line.second_shift_id.hours_per_day                               
+                tot_hrs += line.unit_amount    
             ts.total_hours = tot_hrs
             ts.planned_hours = pln_hrs
             ts.diff_hours = pln_hrs - tot_hrs
+            
             
     def _compute_timesheets_report_count(self):
         for report in self:
@@ -158,7 +164,6 @@ class HRTimesheetSheet(models.Model):
     
     def _action_approval(self):
         approval_category_id = self.env['approval.category'].search([('approval_type','=','timesheet')],limit=1)
-        #raise UserError(_(approval_category_id.name))
         vals = {}
         for sheet in self:
             if approval_category_id:
