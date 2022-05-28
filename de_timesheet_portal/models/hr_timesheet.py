@@ -105,8 +105,7 @@ class HRTimesheetSheet(models.Model):
         for sheet in self:
             if sheet.request_id.request_status == 'approved':
                 sheet.state = 'approved'
-                for line in sheet.timesheet_line_ids:
-                    line.validated = True
+               
             else:
                 sheet.state = sheet.state                
                 
@@ -119,36 +118,35 @@ class HRTimesheetSheet(models.Model):
     def _compute_stage_id(self):
         for sheet in self:
             sheet.stage_id = sheet.stage_find([])
-               
-    def stage_find(self, domain=[], order='sequence'):
-        
+      
+    
+    def stage_find(self, domain=[], order='sequence'):        
         search_domain = []
         search_domain += list(domain)
         return self.env['hr.timesheet.sheet.type'].search(search_domain, order=order, limit=1).id
+    
     
     @api.depends('timesheet_line_ids','timesheet_line_ids.unit_amount')
     def _compute_all_hours(self):
         for ts in self:
             pln_hrs = 0
             tot_hrs = 0
-            date_list = []
-            loop_count = 0
-            for line in ts.timesheet_line_ids:
-                loop_count += 1
-                if loop_count==1:
-                    shift_schedule_line = self.env['hr.shift.schedule.line'].sudo().search([('employee_id','=',ts.employee_id.id),('date','=',line.date),('state','=','posted')], limit=1)
-                    date_list.append(line.date)
+            date_passed = 0
+            general_shift = self.env['resource.calendar'].sudo().search([('company_id','=',ts.employee_id.id),('shift_type','=','general')], limit=1)
+            for line in ts.timesheet_line_ids.sorted(key=lambda r: r.line_date):
+                if str(date_passed)!=str(line.line_date):
+                    date_passed=line.line_date
+                    shift_schedule_line = self.env['hr.shift.schedule.line'].sudo().search([('employee_id','=',ts.employee_id.id),('date','=',line.line_date),('state','=','posted')], limit=1)
+                    if not shift_schedule_line:
+                        pln_hrs += general_shift.hours_per_day    
                     pln_hrs += shift_schedule_line.first_shift_id.hours_per_day
                     if shift_schedule_line.second_shift_id:
-                        pln_hrs += shift_schedule_line.second_shift_id.hours_per_day    
-                for ext_date in date_list:
-                    if ext_date!=str(line.date):
-                        shift_schedule_line = self.env['hr.shift.schedule.line'].sudo().search([('employee_id','=',ts.employee_id.id),('date','=',line.date),('state','=','posted')], limit=1)
-                        date_list.append(line.date)
-                        pln_hrs += shift_schedule_line.first_shift_id.hours_per_day
-                        if shift_schedule_line.second_shift_id:
-                            pln_hrs += shift_schedule_line.second_shift_id.hours_per_day                               
-                tot_hrs += line.unit_amount    
+                        pln_hrs += shift_schedule_line.second_shift_id.hours_per_day                               
+                tot_hrs += line.unit_amount
+            if pln_hrs < 0:
+                pln_hrs = 0
+            if tot_hrs < 0:
+                tot_hrs = 0    
             ts.total_hours = tot_hrs
             ts.planned_hours = pln_hrs
             ts.diff_hours = pln_hrs - tot_hrs
@@ -163,9 +161,16 @@ class HRTimesheetSheet(models.Model):
         self.write({'state': 'pending'})
     
     def _action_approval(self):
-        approval_category_id = self.env['approval.category'].search([('approval_type','=','timesheet')],limit=1)
+        
         vals = {}
         for sheet in self:
+            approval_category_id = self.env['approval.category'].search([('name','=','Timesheet'),('company_id','=',sheet.employee_id.company_id.id)],limit=1)
+            vals = {
+                    'name': 'Timesheet',
+                    'is_parent_approver': True,
+                    'company_id': sheet.employee_id.company_id.id,
+                    }
+            approval_category_id = self.env['approval.category'].sudo().create(vals)
             if approval_category_id:
                 vals = {
                     'name': sheet.name,
@@ -173,9 +178,9 @@ class HRTimesheetSheet(models.Model):
                     'request_status': 'new',
                     'category_id': approval_category_id.id
                 }
-            request_id = self.env['approval.request'].create(vals)
-            request_id.action_confirm()
-            sheet.request_id = request_id.id
+                request_id = self.env['approval.request'].sudo().create(vals)
+                request_id.action_confirm()
+                sheet.request_id = request_id.id
     
     def action_approve(self):
         for sheet in self:
@@ -209,6 +214,26 @@ class HRTimesheet(models.Model):
     
     unit_amount_from = fields.Float('From Quantity', default=0.0)
     unit_amount_to = fields.Float('To Quantity', default=0.0)
+    line_date = fields.Date(string='Line Date')
+    
+    @api.constrains('timesheet_type_id')
+    def _check_timesheet(self):
+        for line in self:
+            if line.timesheet_type_id:
+                task = self.env['project.task'].sudo().search([('name','=',line.timesheet_type_id.name)], limit=1)
+                line.task_id = task.id
+            
+    
+    @api.constrains('line_date')
+    def _check_line_date(self):
+        for line in self:
+            in_existing_timesheet = self.env['account.analytic.line'].search([('id','!=',line.id),('employee_id','=',line.sheet_id.employee_id.id),('line_date','=',line.line_date),('unit_amount_from','<=',line.unit_amount_from),('unit_amount_to','>=',line.unit_amount_from)], limit=1)
+            out_existing_timesheet = self.env['account.analytic.line'].search([('id','!=',line.id),('employee_id','=',line.sheet_id.employee_id.id),('line_date','=',line.line_date),('unit_amount_from','<=',line.unit_amount_to),('unit_amount_to','>=',line.unit_amount_to)], limit=1)
+            if in_existing_timesheet:
+                raise UserError('Timesheet Entry Already Exist for this Date! '+str(in_existing_timesheet.line_date) +' Time From: '+str(in_existing_timesheet.unit_amount_from)+' Time To: '+str(in_existing_timesheet.unit_amount_to))
+            if out_existing_timesheet:
+                raise UserError('Timesheet Entry Already Exist for this Date! '+str(out_existing_timesheet.line_date) +' Time From: '+str(out_existing_timesheet.unit_amount_from)+' Time To: '+str(out_existing_timesheet.unit_amount_to))    
+    
     
     
     def action_delete(self):

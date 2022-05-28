@@ -41,8 +41,11 @@ class CustomerPortal(portal.CustomerPortal):
             sortby = 'name'
         order = searchbar_sortings[sortby]['order']
         # Timesheet Report count
+        
+        domain += ['|',('employee_id.parent_id.user_id','=',http.request.env.context.get('uid')),('employee_id.user_id','=',http.request.env.context.get('uid'))]
         timesheet_report_count = Sheet.search_count(domain)
         # pager
+        
         pager = portal_pager(
             url="/my/timelogs",
             url_args={'date_begin': date_begin, 'date_end': date_end, 'sortby': sortby},
@@ -63,8 +66,6 @@ class CustomerPortal(portal.CustomerPortal):
             })
         values['project_list'] = project_list
         values.update({
-            #'date': date_begin,
-            #'date_end': date_end,
             'sheets': sheets,
             'page_name': 'timelogs_report',
             'default_url': '/my/timelogs',
@@ -180,8 +181,6 @@ class CustomerPortal(portal.CustomerPortal):
         
         values['message'] = message
         message = kw.get('decline_message')
-        
-       
         return request.render('de_timesheet_portal.portal_my_timelog', values)
     
     # --------------------------------------------
@@ -294,18 +293,59 @@ class CustomerPortal(portal.CustomerPortal):
             'date': fields.date.today(),
         }
         sheet_id = request.env['hr.timesheet.sheet'].sudo().create(vals)
+        sheet_id.update({
+            'date': fields.date.today(),
+        })
         return request.redirect('/my/timelog/%s' % (sheet_id.id))
     
     @http.route([
         '/my/timelog/add/line',
     ], type='http', auth="public", website=True)
-    def timesheet_add_line(self, **kw):
+    def timesheet_add_line(self, access_token=None,**kw):
         sheet = request.env['hr.timesheet.sheet'].sudo().browse(int(kw.get('sheet_id')),)
         vals = {}
+        values ={}
         time_from = datetime.strptime(kw.get('unit_amount_from'), '%H:%M')
         time_to = datetime.strptime(kw.get('unit_amount_to'), '%H:%M')
         unit_time_from = str(time_from.hour)+'.'+ str(time_from.minute)
         unit_time_to = str(time_to.hour)+'.'+ str(time_to.minute)
+        in_existing_timesheet = request.env['account.analytic.line'].search([('employee_id','=',sheet.employee_id.id),('line_date','=',kw.get('date')),('unit_amount_from','<=',unit_time_from),('unit_amount_to','>=',unit_time_from)], limit=1)
+        out_existing_timesheet = request.env['account.analytic.line'].search([('employee_id','=',sheet.employee_id.id),('line_date','=',kw.get('date')),('unit_amount_from','<=',unit_time_to),('unit_amount_to','>=',unit_time_to)], limit=1)
+        if in_existing_timesheet:
+            warning_message='Timesheet Entry Already Exist! '+ "\n"+'Date: ' +str(in_existing_timesheet.line_date.strftime('%d-%b-%y'))+ "\n"+' Time From: '+str(in_existing_timesheet.unit_amount_from)+ "\n"+' Time To: '+str(in_existing_timesheet.unit_amount_to)
+            values = self._sheet_get_page_view_values(sheet, access_token, **kw)
+            values.update({
+                'sheet': sheet,
+                'error_flag': 1,
+                'errora_message': warning_message,
+                'projects': request.env['project.project'].search([]),
+                'type_ids': request.env['hr.timesheet.type'].sudo().search([]),
+                'name': kw.get('name'),
+                'project_id_ora': int(kw.get('project_id')),
+                'task_id_ora': int(kw.get('task_id')),
+                'unit_amount_from': kw.get('unit_amount_from'),
+                'unit_amount_to': kw.get('unit_amount_to'),
+                'date': kw.get('date'),
+            })
+            return request.render('de_timesheet_portal.portal_my_timelog', values)
+
+        if out_existing_timesheet:
+            warning_message='Timesheet Entry Already Exist! '+"\n"+'Date: '+str(out_existing_timesheet.line_date.strftime('%d-%b-%y') )+ "\n" +' Time From: '+str(out_existing_timesheet.unit_amount_from)+ "\n"+' Time To:   '+str(out_existing_timesheet.unit_amount_to)
+            values = self._sheet_get_page_view_values(sheet, access_token, **kw)
+            values.update({
+                'sheet': sheet,
+                'error_flag': 1,
+                'errora_message': warning_message,
+                'projects': request.env['project.project'].search([]),
+                'type_ids': request.env['hr.timesheet.type'].sudo().search([]),
+                'name': kw.get('name'),
+                'project_id_ora': int(kw.get('project_id')),
+                'task_id_ora': int(kw.get('task_id')),
+                'unit_amount_from': kw.get('unit_amount_from'),
+                'unit_amount_to': kw.get('unit_amount_to'),
+                'date': kw.get('date'),
+            })
+            return request.render('de_timesheet_portal.portal_my_timelog', values)
         vals = {
             'sheet_id': sheet.id,
             'project_id': int(kw.get('project_id')),
@@ -315,6 +355,7 @@ class CustomerPortal(portal.CustomerPortal):
             'unit_amount_to': float(unit_time_to),
             'unit_amount': float(unit_time_to) - float(unit_time_from),
             'date': kw.get('date'),
+            'line_date': kw.get('date'),
             'employee_id': sheet.employee_id.id
         }
         timesheet_id = request.env['account.analytic.line'].sudo().create(vals)
