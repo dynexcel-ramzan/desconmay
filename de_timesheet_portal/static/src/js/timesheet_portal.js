@@ -15,7 +15,6 @@ odoo.define('de_timesheet_portal', function (require) {
 
         })
     })
-    
     var model = 'project.task';
     // Use an empty array to search for all the records
     var domain = [];
@@ -28,6 +27,4 @@ odoo.define('de_timesheet_portal', function (require) {
     }).then(function (data) {
         console.log(data);
     });
-
-    
 });

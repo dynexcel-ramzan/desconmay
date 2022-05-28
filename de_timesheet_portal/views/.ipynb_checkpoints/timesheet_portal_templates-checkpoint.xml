@@ -96,8 +96,19 @@
                           </t>     
                         </td>
                         <td class="text-right">
+                            <t t-if='sheet.state=="pending"'>
+                              <t t-foreach="sheet.request_id.approver_ids" t-as="app">  
+                               <t t-if='app.user_id.id==uid'>
+                                  <a role="button" class="btn btn-primary" t-att-href="'/my/timelog/draft/%s/%s' % (sheet.id, sheet.access_token)">Refuse</a>
+                               </t>
+                              </t>    
+                            </t> 
                             
-                                <button class="btn btn-danger" data-target="#timelog_reject_modal" data-toggle="modal"><i class="fa fa-trash"/></button>
+                            <t t-if='sheet.state=="draft"'>
+                              <t t-if='sheet.employee_id.user_id.id==uid'>  
+                                <a role="button" class="btn btn-primary" t-att-href="'/my/timelog/reject/%s/%s' % (sheet.id, sheet.access_token)">Cancel</a>
+                              </t>          
+                            </t>    
                            
                         </td>
                     </tr>
@@ -281,7 +292,7 @@
 
     <!-- Display timesheet records in line item of detail page -->
     <template id="portal_timesheet_table" name="Portal Timesheet Table">
-        <!-- Modal dialogs -->
+
         <t t-call="de_timesheet_portal.portal_action_modal_timesheet_dialogs"/>
         <t t-if='sheet.state=="draft"'>
         <t t-if='sheet.employee_id.user_id.id==uid'>    

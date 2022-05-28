@@ -221,6 +221,35 @@ class CustomerPortal(portal.CustomerPortal):
     # Reject request
     # ------------------------
     @http.route([
+        '/my/timelog/draft/<int:sheet_id>',
+        '/my/timelog/draft/<int:sheet_id>/<access_token>',
+    ], type='http', auth="public", website=True)
+    def request_draft(self, sheet_id=None, access_token=None, **kw):
+        try:
+            sheet_sudo = self._document_check_access('hr.timesheet.sheet', sheet_id, access_token)
+        except (AccessError, MissingError):
+            return request.redirect('/my')
+        
+        body = _('request rejected')
+        sheet_sudo.with_context(mail_create_nosubscribe=True).message_post(body=body, message_type='comment', subtype_xmlid='mail.mt_note')
+        
+        message = kw.get('decline_message')
+
+        query_string = False
+        sheet_sudo.action_draft()
+        if message:
+            sheet_sudo.action_draft()
+            _message_post_helper('hr.timesheet.sheet', sheet_id, message, **{'token': access_token} if access_token else {})
+        else:
+            query_string = "&message=cant_reject"
+
+        return request.redirect('/my/timelog/%s' % (sheet_id))
+    
+    
+    # ------------------------
+    # Reject request
+    # ------------------------
+    @http.route([
         '/my/timelog/reject/<int:sheet_id>',
         '/my/timelog/reject/<int:sheet_id>/<access_token>',
     ], type='http', auth="public", website=True)

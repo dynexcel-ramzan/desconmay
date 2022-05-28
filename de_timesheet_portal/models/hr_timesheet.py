@@ -69,7 +69,7 @@ class HRTimesheetSheet(models.Model):
 
     
     name = fields.Char(required=True, translate=True)
-    date = fields.Date(string='Date', required=True, states=READONLY_STATES)
+    date = fields.Date(string='Date', required=True)
     
     employee_id = fields.Many2one('hr.employee', "Employee", domain=_domain_employee_id, required=True, context={'active_test': False}, states=READONLY_STATES,)
     department_id = fields.Many2one('hr.department', compute='_compute_from_employee_id', readonly=True, copy=True, string="Department")
@@ -132,13 +132,14 @@ class HRTimesheetSheet(models.Model):
             pln_hrs = 0
             tot_hrs = 0
             date_passed = 0
-            general_shift = self.env['resource.calendar'].sudo().search([('company_id','=',ts.employee_id.id),('shift_type','=','general')], limit=1)
+            general_shift = self.env['resource.calendar'].sudo().search([('shift_type','=','general')], limit=1)
             for line in ts.timesheet_line_ids.sorted(key=lambda r: r.line_date):
                 if str(date_passed)!=str(line.line_date):
                     date_passed=line.line_date
                     shift_schedule_line = self.env['hr.shift.schedule.line'].sudo().search([('employee_id','=',ts.employee_id.id),('date','=',line.line_date),('state','=','posted')], limit=1)
                     if not shift_schedule_line:
-                        pln_hrs += general_shift.hours_per_day    
+                        pln_hrs += general_shift.hours_per_day  
+                        
                     pln_hrs += shift_schedule_line.first_shift_id.hours_per_day
                     if shift_schedule_line.second_shift_id:
                         pln_hrs += shift_schedule_line.second_shift_id.hours_per_day                               
@@ -188,8 +189,16 @@ class HRTimesheetSheet(models.Model):
             
     def action_refuse(self):
         for sheet in self:
-            sheet.request_id.sudo().action_refuse()
+            sheet.update({
+                'state': 'refused' 
+            })
             
+    def action_draft(self):
+        for sheet in self:
+            sheet.request_id.sudo().action_refuse()
+            sheet.update({
+                'state': 'draft'
+            })       
             
     def action_reject1(self):
         stage_id = self.env['hr.timesheet.sheet.type']
@@ -212,9 +221,11 @@ class HRTimesheet(models.Model):
     sheet_id = fields.Many2one('hr.timesheet.sheet', string="Timesheet Report", domain="[('employee_id', '=', employee_id), ('company_id', '=', company_id)]", readonly=True, copy=False)
     timesheet_type_id = fields.Many2one('hr.timesheet.type', "Type", required=True)
     
-    unit_amount_from = fields.Float('From Quantity', default=0.0)
-    unit_amount_to = fields.Float('To Quantity', default=0.0)
+    unit_amount_from = fields.Float('Time From', default=0.0)
+    unit_amount_to = fields.Float('Time To', default=0.0)
     line_date = fields.Date(string='Line Date')
+    ora_date = fields.Date(string='ORA Date')
+
     
     @api.constrains('timesheet_type_id')
     def _check_timesheet(self):
@@ -228,6 +239,7 @@ class HRTimesheet(models.Model):
     def _check_line_date(self):
         for line in self:
             in_existing_timesheet = self.env['account.analytic.line'].search([('id','!=',line.id),('employee_id','=',line.sheet_id.employee_id.id),('line_date','=',line.line_date),('unit_amount_from','<=',line.unit_amount_from),('unit_amount_to','>=',line.unit_amount_from)], limit=1)
+            
             out_existing_timesheet = self.env['account.analytic.line'].search([('id','!=',line.id),('employee_id','=',line.sheet_id.employee_id.id),('line_date','=',line.line_date),('unit_amount_from','<=',line.unit_amount_to),('unit_amount_to','>=',line.unit_amount_to)], limit=1)
             if in_existing_timesheet:
                 raise UserError('Timesheet Entry Already Exist for this Date! '+str(in_existing_timesheet.line_date) +' Time From: '+str(in_existing_timesheet.unit_amount_from)+' Time To: '+str(in_existing_timesheet.unit_amount_to))
