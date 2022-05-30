@@ -55,9 +55,8 @@
                             <page name="timesheets" string="Timesheet">
                                 <field name="timesheet_line_ids" context="{'default_employee_id': employee_id}">
                                     <tree editable="bottom">
-                                        <field name="line_date" string='Timesheet Date'/>
-                                        <field name="ora_date" string='ORA Date'/>
-                                        <field name="date" invisible='0'/>
+                                        <field name="line_date" string='Date'/>
+                                        <field name="date" invisible='1'/>
                                         <field name="employee_id" invisible="1"/>
                                         <field name="project_id" required="1" options="{'no_create_edit': True}"/>
                                         <field name="task_id" optional="show" options="{'no_create_edit': True, 'no_open': True}" widget="task_with_hours" context="{'default_project_id': project_id}" domain="[('project_id', '=', project_id)]"/>

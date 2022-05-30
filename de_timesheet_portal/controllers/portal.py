@@ -311,6 +311,7 @@ class CustomerPortal(portal.CustomerPortal):
             timesheet.sudo().unlink()
         return request.redirect('/my/timelog/%s' % (sheet_sudo.id))
     
+    
     @http.route([
         '/my/timelog/add',
     ], type='http', auth="public", website=True)
@@ -338,6 +339,23 @@ class CustomerPortal(portal.CustomerPortal):
         time_to = datetime.strptime(kw.get('unit_amount_to'), '%H:%M')
         unit_time_from = str(time_from.hour)+'.'+ str(time_from.minute)
         unit_time_to = str(time_to.hour)+'.'+ str(time_to.minute)
+        if unit_time_from > unit_time_to:
+            warning_message='Out Time cannot be Less than In Time! '+"/n"+' Time From: '+str(unit_time_from)+"/n"+' Time To: '+str(unit_time_to)
+            values = self._sheet_get_page_view_values(sheet, access_token, **kw)
+            values.update({
+                'sheet': sheet,
+                'error_flag': 1,
+                'errora_message': warning_message,
+                'projects': request.env['project.project'].search([]),
+                'type_ids': request.env['hr.timesheet.type'].sudo().search([]),
+                'name': kw.get('name'),
+                'project_id_ora': int(kw.get('project_id')),
+                'task_id_ora': int(kw.get('task_id')),
+                'unit_amount_from': kw.get('unit_amount_from'),
+                'unit_amount_to': kw.get('unit_amount_to'),
+                'date': kw.get('date'),
+            })
+            return request.render('de_timesheet_portal.portal_my_timelog', values)    
         in_existing_timesheet = request.env['account.analytic.line'].search([('employee_id','=',sheet.employee_id.id),('line_date','=',kw.get('date')),('unit_amount_from','<=',unit_time_from),('unit_amount_to','>=',unit_time_from)], limit=1)
         out_existing_timesheet = request.env['account.analytic.line'].search([('employee_id','=',sheet.employee_id.id),('line_date','=',kw.get('date')),('unit_amount_from','<=',unit_time_to),('unit_amount_to','>=',unit_time_to)], limit=1)
         if in_existing_timesheet:
@@ -390,4 +408,4 @@ class CustomerPortal(portal.CustomerPortal):
         timesheet_id = request.env['account.analytic.line'].sudo().create(vals)
         return request.redirect('/my/timelog/%s' % (sheet.id))
 
-    
+

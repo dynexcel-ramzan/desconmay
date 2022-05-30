@@ -89,16 +89,18 @@
                             <t t-esc="sheet.state" />
                         </td>
                         <td class="text-right">
+                         <t t-if='sheet.state=="pending"'>   
                           <t t-foreach="sheet.request_id.approver_ids" t-as="app">  
                             <t t-if='app.user_id.id==uid'>
                                 <a class="btn btn-primary" t-attf-href="/my/timelog/approve/#{sheet.id}?"><i class="fa fa-check"/></a>
                             </t>
-                          </t>     
+                          </t> 
+                          </t>    
                         </td>
                         <td class="text-right">
                             <t t-if='sheet.state=="pending"'>
                               <t t-foreach="sheet.request_id.approver_ids" t-as="app">  
-                               <t t-if='app.user_id.id==uid'>
+                               <t t-if='app.user_id.id==uid'>  
                                   <a role="button" class="btn btn-primary" t-att-href="'/my/timelog/draft/%s/%s' % (sheet.id, sheet.access_token)">Refuse</a>
                                </t>
                               </t>    
@@ -201,7 +203,9 @@
                     <div class="row justify-content-center text-center d-print-none pt-1 pb-4">
                         <t>
                             <div class="col-sm-auto mt8" t-if="sheet.state == 'draft' or sheet.user_status == 'new'">
-                                <a class="btn btn-secondary" t-attf-href="/my/timelog/submit/#{sheet.id}?"><i class="fa fa-check"/><t> Submit Request</t></a>
+                              <t t-if='sheet.employee_id.user_id.id==uid'>  
+                                 <a class="btn btn-secondary" t-attf-href="/my/timelog/submit/#{sheet.id}?"><i class="fa fa-check"/><t> Submit Request</t></a>
+                              </t>    
                             </div>
                             
                             <div class="col-sm-auto mt8" t-if="sheet.state == 'pending' and sheet.user_status == 'pending'">
@@ -284,17 +288,7 @@
                     </div>
                 </div>
             </div>
-            <t t-call="de_timesheet_portal.portal_timesheet_table"/>
-            
-        </div>
-        
-    </template>
-
-    <!-- Display timesheet records in line item of detail page -->
-    <template id="portal_timesheet_table" name="Portal Timesheet Table">
-
-        <t t-call="de_timesheet_portal.portal_action_modal_timesheet_dialogs"/>
-        <t t-if='sheet.state=="draft"'>
+            <t t-if='sheet.state=="draft"'>
         <t t-if='sheet.employee_id.user_id.id==uid'>    
         <form id="timelog_new" data-toggle="validator" action="/my/timelog/add/line" method="post"  enctype="multipart/form-data">
                     <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
@@ -358,13 +352,13 @@
 							</div>
                              <div class="row mt8">
                                 <div class="col-sm-2">
-                                    <label for="date_from" class="control-label"><strong>Time From:</strong></label>
+                                    <label for="date_from" class="control-label"><strong>Start Time:</strong></label>
 								</div>
                                 <div class="col-sm-4">
                                     <input type="time"  id="unit_amount_from" name="unit_amount_from" class="form-control" required="1"  t-options='{"widget": "float_time"}' t-att-value="unit_amount_from" />
                                 </div>
                                 <div class="col-sm-2">
-                                    <label for="date_from" class="control-label"><strong>Time To:</strong></label>
+                                    <label for="date_from" class="control-label"><strong>End Time:</strong></label>
                                 </div>
                                 <div class="col-sm-4">
                                     <input type="time" id="unit_amount_to" name="unit_amount_to" class="form-control" required="1" t-options='{"widget": "float_time"}' t-att-value="unit_amount_to" />
@@ -407,7 +401,7 @@
               </tr>
             </thead>
             <tr t-foreach="sheet.timesheet_line_ids" t-as="timesheet">
-                <td><t t-esc="timesheet.line_date" t-options='{"widget": "date"}'/></td>
+                <td><t t-esc="timesheet.line_date" /></td>
                 <td><t t-esc="timesheet.project_id.name"/></td>
                 <td><t t-esc="timesheet.task_id.name"/></td>
                 <td><t t-esc="timesheet.name"/></td>
@@ -421,13 +415,25 @@
                 <td >
                     <span  t-field="timesheet.unit_amount" t-options='{"widget": "float_time"}'/>
                 </td>
-                <td class="text-right" t-if="sheet.state == 'draft'">
-                    <a t-attf-href="/my/timelog/delete/#{timesheet.id}?"><i class="fa fa-trash"></i></a>
+                <td class="text-right" t-if="timesheet.state == 'draft'">
+                   <t t-if='timesheet.employee_id.user_id.id==uid'>  
+                      <a t-attf-href="/my/timelog/delete/#{timesheet.id}?"><i class="fa fa-trash"></i></a>
+                   </t>    
                 </td>
                 
             </tr>
             
         </table>
+            
+        </div>
+        
+    </template>
+
+    <!-- Display timesheet records in line item of detail page -->
+    <template id="portal_timesheet_table" name="Portal Timesheet Table">
+
+        <t t-call="de_timesheet_portal.portal_action_modal_timesheet_dialogs"/>
+        
     </template>
 
     <!-- relevant modals of action buttons -->
@@ -445,7 +451,7 @@
                             <p>Are you sure you wish to proceed?</p>
                         </div>
                         <div class="modal-footer">
-                            <a role="button" class="btn btn-primary" t-att-href="'/my/timelog/reject/%s/%s' % (sheet.id, sheet.access_token)">Reject</a>
+                            <a role="button" class="btn btn-primary" t-att-href="'/my/timelog/draft/%s/%s' % (sheet.id, sheet.access_token)">Reject</a>
                             <button type="button" class="btn btn-light" data-dismiss="modal">Discard</button>
                         </div>
                     </div>

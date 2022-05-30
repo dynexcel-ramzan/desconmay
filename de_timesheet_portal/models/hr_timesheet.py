@@ -147,10 +147,13 @@ class HRTimesheetSheet(models.Model):
             if pln_hrs < 0:
                 pln_hrs = 0
             if tot_hrs < 0:
-                tot_hrs = 0    
+                tot_hrs = 0  
+            diff_hrs = pln_hrs - tot_hrs 
+            if diff_hrs < 0:
+                diff_hrs=0
             ts.total_hours = tot_hrs
             ts.planned_hours = pln_hrs
-            ts.diff_hours = pln_hrs - tot_hrs
+            ts.diff_hours = diff_hrs
             
             
     def _compute_timesheets_report_count(self):
