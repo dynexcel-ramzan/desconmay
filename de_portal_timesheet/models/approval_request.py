@@ -3,6 +3,8 @@
 from odoo import models, fields, api
 
 
+
+
 class ApprovalRequest(models.Model):
     _inherit = 'approval.request'
 
