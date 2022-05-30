@@ -20,10 +20,10 @@ class CustomerPortal(portal.CustomerPortal):
     def _prepare_home_portal_values(self, counters):
         values = super()._prepare_home_portal_values(counters)
         if 'timesheet_report_count' in counters:
-            values['timesheet_report_count'] = request.env['hr.timesheet.sheet'].search_count([]) \
+            values['timesheet_report_count'] = request.env['hr.timesheet.sheet'].sudo().search_count([]) \
                 if request.env['hr.timesheet.sheet'].check_access_rights('read', raise_exception=False) else 0
         if 'timesheet_count' in counters:
-            values['timesheet_count'] = request.env['account.analytic.line'].search_count([]) \
+            values['timesheet_count'] = request.env['account.analytic.line'].sudo().search_count([]) \
                 if request.env['account.analytic.line'].check_access_rights('read', raise_exception=False) else 0
         return values
     
@@ -43,7 +43,7 @@ class CustomerPortal(portal.CustomerPortal):
         # Timesheet Report count
         
         domain += ['|',('employee_id.parent_id.user_id','=',http.request.env.context.get('uid')),('employee_id.user_id','=',http.request.env.context.get('uid'))]
-        timesheet_report_count = Sheet.search_count(domain)
+        timesheet_report_count = Sheet.sudo().search_count(domain)
         # pager
         
         pager = portal_pager(
@@ -54,7 +54,7 @@ class CustomerPortal(portal.CustomerPortal):
             step=self._items_per_page
         )
         # content according to pager and archive selected
-        sheets = Sheet.search(domain, order=order, limit=self._items_per_page, offset=pager['offset'])
+        sheets = Sheet.sudo().search(domain, order=order, limit=self._items_per_page, offset=pager['offset'])
         request.session['my_report_timesheets_history'] = sheets.ids[:100]
         
         project_list = []
@@ -120,7 +120,7 @@ class CustomerPortal(portal.CustomerPortal):
         '''
         This method provides fields related to the project to render the website sale form
         '''
-        projects = request.env['project.project'].search([])
+        projects = request.env['project.project'].sudo().search([])
         type_ids = request.env['hr.timesheet.type'].sudo().search([])
         res = {
             'task_ids': projects.get_website_sale_tasks(),
@@ -340,13 +340,13 @@ class CustomerPortal(portal.CustomerPortal):
         unit_time_from = str(time_from.hour)+'.'+ str(time_from.minute)
         unit_time_to = str(time_to.hour)+'.'+ str(time_to.minute)
         if unit_time_from > unit_time_to:
-            warning_message='Out Time cannot be Less than In Time! '+"/n"+' Time From: '+str(unit_time_from)+"/n"+' Time To: '+str(unit_time_to)
+            warning_message='Out Time cannot be Less than In Time! '+ "\n"+' Time From: '+str(unit_time_from)+ "\n"+' Time To: '+str(unit_time_to)
             values = self._sheet_get_page_view_values(sheet, access_token, **kw)
             values.update({
                 'sheet': sheet,
                 'error_flag': 1,
                 'errora_message': warning_message,
-                'projects': request.env['project.project'].search([]),
+                'projects': request.env['project.project'].sudo().search([]),
                 'type_ids': request.env['hr.timesheet.type'].sudo().search([]),
                 'name': kw.get('name'),
                 'project_id_ora': int(kw.get('project_id')),
@@ -356,8 +356,8 @@ class CustomerPortal(portal.CustomerPortal):
                 'date': kw.get('date'),
             })
             return request.render('de_timesheet_portal.portal_my_timelog', values)    
-        in_existing_timesheet = request.env['account.analytic.line'].search([('employee_id','=',sheet.employee_id.id),('line_date','=',kw.get('date')),('unit_amount_from','<=',unit_time_from),('unit_amount_to','>=',unit_time_from)], limit=1)
-        out_existing_timesheet = request.env['account.analytic.line'].search([('employee_id','=',sheet.employee_id.id),('line_date','=',kw.get('date')),('unit_amount_from','<=',unit_time_to),('unit_amount_to','>=',unit_time_to)], limit=1)
+        in_existing_timesheet = request.env['account.analytic.line'].sudo().search([('employee_id','=',sheet.employee_id.id),('line_date','=',kw.get('date')),('unit_amount_from','<=',unit_time_from),('unit_amount_to','>=',unit_time_from),('sheet_id.state','!=','refused')], limit=1)
+        out_existing_timesheet = request.env['account.analytic.line'].sudo().search([('employee_id','=',sheet.employee_id.id),('line_date','=',kw.get('date')),('unit_amount_from','<=',unit_time_to),('unit_amount_to','>=',unit_time_to),('sheet_id.state','!=','refused')], limit=1)
         if in_existing_timesheet:
             warning_message='Timesheet Entry Already Exist! '+ "\n"+'Date: ' +str(in_existing_timesheet.line_date.strftime('%d-%b-%y'))+ "\n"+' Time From: '+str(in_existing_timesheet.unit_amount_from)+ "\n"+' Time To: '+str(in_existing_timesheet.unit_amount_to)
             values = self._sheet_get_page_view_values(sheet, access_token, **kw)
@@ -365,7 +365,7 @@ class CustomerPortal(portal.CustomerPortal):
                 'sheet': sheet,
                 'error_flag': 1,
                 'errora_message': warning_message,
-                'projects': request.env['project.project'].search([]),
+                'projects': request.env['project.project'].sudo().search([]),
                 'type_ids': request.env['hr.timesheet.type'].sudo().search([]),
                 'name': kw.get('name'),
                 'project_id_ora': int(kw.get('project_id')),
@@ -383,7 +383,7 @@ class CustomerPortal(portal.CustomerPortal):
                 'sheet': sheet,
                 'error_flag': 1,
                 'errora_message': warning_message,
-                'projects': request.env['project.project'].search([]),
+                'projects': request.env['project.project'].sudo().search([]),
                 'type_ids': request.env['hr.timesheet.type'].sudo().search([]),
                 'name': kw.get('name'),
                 'project_id_ora': int(kw.get('project_id')),

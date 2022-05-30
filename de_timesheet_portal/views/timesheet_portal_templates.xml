@@ -77,13 +77,13 @@
                             <t t-esc="sheet.employee_id.name" /> 
                         </td>
                         <td class="text-right">
-                            <t t-esc="round(sheet.planned_hours,2)" />
+                            <t t-esc="round(sheet.planned_hours,2)" t-options='{"widget": "float_time"}' />
                         </td>
                         <td class="text-right">
-                            <t t-esc="round(sheet.total_hours,2)" />
+                            <t t-esc="round(sheet.total_hours,2)" t-options='{"widget": "float_time"}' />
                         </td>
                         <td class="text-right">
-                            <t t-esc="round(sheet.diff_hours,2)" />
+                            <t t-esc="round(sheet.diff_hours,2)" t-options='{"widget": "float_time"}' />
                         </td>
                         <td class="text-right">
                             <t t-esc="sheet.state" />
@@ -276,15 +276,15 @@
                 <div class="row" id="sheet_hours">
                     <div class="mb-3 col-4">
                         <strong>Planned Hrs:</strong>
-                        <span t-field="sheet.planned_hours" />
+                        <span t-field="sheet.planned_hours" t-options='{"widget": "float_time"}' />
                     </div>
                     <div class="mb-3 col-4">
-                        <strong>Total Hrs:</strong>
-                        <span t-field="sheet.total_hours" />
+                        <strong>Total Work Hrs:</strong>
+                        <span t-field="sheet.total_hours" t-options='{"widget": "float_time"}'/>
                     </div>
                     <div class="mb-3 col-4">
                         <strong>Idle Hrs:</strong>
-                        <span t-field="sheet.diff_hours" />
+                        <span t-field="sheet.diff_hours" t-options='{"widget": "float_time"}' />
                     </div>
                 </div>
             </div>
@@ -406,17 +406,17 @@
                 <td><t t-esc="timesheet.task_id.name"/></td>
                 <td><t t-esc="timesheet.name"/></td>
                 <td >
-                    <span  t-field="timesheet.unit_amount_from" t-options='{"widget": "float_time"}'/>
+                    <span  t-field="timesheet.unit_amount_from" />
                 </td>
                 <td >
-                    <span  t-field="timesheet.unit_amount_to" t-options='{"widget": "float_time"}'/>
+                    <span  t-field="timesheet.unit_amount_to" />
                 </td>
                 
                 <td >
                     <span  t-field="timesheet.unit_amount" t-options='{"widget": "float_time"}'/>
                 </td>
-                <td class="text-right" t-if="timesheet.state == 'draft'">
-                   <t t-if='timesheet.employee_id.user_id.id==uid'>  
+                <td class="text-right" t-if="sheet.state == 'draft'">
+                   <t t-if='sheet.employee_id.user_id.id==uid'>  
                       <a t-attf-href="/my/timelog/delete/#{timesheet.id}?"><i class="fa fa-trash"></i></a>
                    </t>    
                 </td>

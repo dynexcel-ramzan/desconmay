@@ -1,0 +1,14 @@
+<odoo>
+  <data>
+      
+      <report 
+            id="open_timesheet_report_wizard_action"
+            string="Timesheet Report"
+            model="report.de_timesheet_portal.timesheet_report"
+            report_type="qweb-pdf"
+            file="de_timesheet_portal.timesheet_report"
+            name="de_timesheet_portal.timesheet_report"
+        />
+   
+  </data>
+</odoo>

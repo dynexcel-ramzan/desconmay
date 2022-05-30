@@ -241,9 +241,9 @@ class HRTimesheet(models.Model):
     @api.constrains('line_date')
     def _check_line_date(self):
         for line in self:
-            in_existing_timesheet = self.env['account.analytic.line'].search([('id','!=',line.id),('employee_id','=',line.sheet_id.employee_id.id),('line_date','=',line.line_date),('unit_amount_from','<=',line.unit_amount_from),('unit_amount_to','>=',line.unit_amount_from)], limit=1)
+            in_existing_timesheet = self.env['account.analytic.line'].search([('id','!=',line.id),('employee_id','=',line.sheet_id.employee_id.id),('line_date','=',line.line_date),('unit_amount_from','<=',line.unit_amount_from),('unit_amount_to','>=',line.unit_amount_from),('sheet_id.state','!=','refused')], limit=1)
             
-            out_existing_timesheet = self.env['account.analytic.line'].search([('id','!=',line.id),('employee_id','=',line.sheet_id.employee_id.id),('line_date','=',line.line_date),('unit_amount_from','<=',line.unit_amount_to),('unit_amount_to','>=',line.unit_amount_to)], limit=1)
+            out_existing_timesheet = self.env['account.analytic.line'].search([('id','!=',line.id),('employee_id','=',line.sheet_id.employee_id.id),('line_date','=',line.line_date),('unit_amount_from','<=',line.unit_amount_to),('unit_amount_to','>=',line.unit_amount_to),('sheet_id.state','!=','refused')], limit=1)
             if in_existing_timesheet:
                 raise UserError('Timesheet Entry Already Exist for this Date! '+str(in_existing_timesheet.line_date) +' Time From: '+str(in_existing_timesheet.unit_amount_from)+' Time To: '+str(in_existing_timesheet.unit_amount_to))
             if out_existing_timesheet:

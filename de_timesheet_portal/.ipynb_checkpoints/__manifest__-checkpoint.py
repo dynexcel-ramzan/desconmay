@@ -30,7 +30,7 @@
     # always loaded
     'data': [
         'security/ir.model.access.csv',
-        #'views/assets.xml',
+        'wizard/timesheet_report_wizard.xml',
         'views/hr_timesheet_type_views.xml',
         'views/hr_timesheet_views.xml',
         'views/timesheet_portal_templates.xml',
