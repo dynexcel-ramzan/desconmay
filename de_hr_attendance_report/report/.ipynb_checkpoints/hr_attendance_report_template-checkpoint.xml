@@ -4,6 +4,7 @@
     <t t-call="web.html_container">
     <t t-call="web.external_layout">
         <t t-set="employee" t-value="employee.with_context()"/>
+        <t t-set="company" t-value="request.env['hr.employee'].search([('emp_number','=',employee_attendance['employee_no'])], limit=1).company_id"/> 
         <div class="page">
             <div class="oe_structure"/>
             
@@ -65,6 +66,7 @@
                         <th>Hours </th>
                         <th>Shift Allocated</th>
                         <th>Rest Day </th>
+                        <th>PRESENT</th>
                         <th  >Remarks</th>
                     </tr>
                 </thead>
@@ -81,6 +83,7 @@
                                 <td ><span t-esc="round(attendance['hours'],2)"/></td>
                                 <td><span t-esc="attendance['shift']"/></td>
                                 <td ><span t-esc="attendance['rest_day']"/></td>
+                                <td ><span t-esc="attendance['present']"/></td>
                                 <t t-if="attendance['holiday']=='1'">
                                    <td style="background-color:LightGreen;">
                                        <span t-esc="attendance['remarks']"/>
@@ -230,7 +233,8 @@
                         <th>Hours </th>
                         <th>Shift Allocated</th>
                         <th>Rest Day </th>
-                        <th  >Remarks</th>
+                        <th>PRESENT</th>
+                        <th>Remarks</th>
                     </tr>
                 </thead>
                        
@@ -246,6 +250,7 @@
                                 <td ><span t-esc="round(attendance['hours'],2)"/></td>
                                 <td><span t-esc="attendance['shift']"/></td>
                                 <td ><span t-esc="attendance['rest_day']"/></td>
+                                <td ><span t-esc="attendance['present']"/></td>
                                 <t t-if="attendance['holiday']=='1'">
                                    <td style="background-color:LightGreen;">
                                        <span t-esc="attendance['remarks']"/>
@@ -255,8 +260,7 @@
                                   <t t-if="attendance['absent']=='1'">   
                                     <td style="background-color:red;">
                                         <span t-esc="attendance['remarks']"/>
-                                    </td>
-                                      
+                                    </td>       
                                   </t>
                                 </t>
                                 <t t-if="attendance['holiday']!='1'">

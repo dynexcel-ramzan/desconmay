@@ -184,7 +184,15 @@ class HrAttendanceReport(models.AbstractModel):
                                 absent_day_count += 1    
                         else:
                             absent = '1'
-                            absent_day_count += 1   
+                            absent_day_count += 1
+                            
+                present = 'A' 
+                if  absent!='1':  
+                    present = 'P'
+                if  working_hours >= 24:
+                    remarks = 'Working Hours are wrong' 
+                    present = ' '
+                 
                 attendances.append({
                     'date': start_date.strftime('%d/%b/%Y'),
                     'day':  start_date.strftime('%A'),
@@ -194,6 +202,7 @@ class HrAttendanceReport(models.AbstractModel):
                     'shift': current_shift.name,
                     'holiday': holiday,
                     'absent': absent,
+                    'present': present,
                     'rest_day': rest_day,
                     'remarks': remarks,
                 }) 
@@ -403,13 +412,21 @@ class PortalAttendanceReport(models.AbstractModel):
                                 absent_day_count += 1     
                         else:
                             absent = '1'
-                            absent_day_count += 1   
+                            absent_day_count += 1
+                            
+                present = 'A' 
+                if  absent!='1':  
+                    present = 'P'
+                if  working_hours >= 24:
+                    remarks = 'Working Hours are wrong' 
+                    present = ' '            
                 attendances.append({
                     'date': start_date.strftime('%d/%b/%Y'),
                     'day':  start_date.strftime('%A'),
                     'check_in': check_in_time.strftime('%d/%b/%Y %H:%M:%S') if check_in_time else '',
                     'check_out':  check_out_time.strftime('%d/%b/%Y %H:%M:%S') if check_out_time else '',
                     'hours': working_hours,
+                    'present': present,
                     'shift': current_shift.name,
                     'holiday': holiday,
                     'absent': absent,
