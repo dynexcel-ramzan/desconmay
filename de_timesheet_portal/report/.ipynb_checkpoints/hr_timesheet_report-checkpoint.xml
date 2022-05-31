@@ -1,9 +1,9 @@
 <odoo>
-  <data>
+  <data noupdate='1'>
       
       <report 
             id="open_timesheet_report_wizard_action"
-            string="Timesheet Report"
+            string="Timesheet Report(PDF)"
             model="report.de_timesheet_portal.timesheet_report"
             report_type="qweb-pdf"
             file="de_timesheet_portal.timesheet_report"

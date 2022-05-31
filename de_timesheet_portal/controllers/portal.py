@@ -13,10 +13,79 @@ from odoo.tools import groupby as groupbyelem
 from odoo.addons.portal.controllers import portal
 from odoo.addons.portal.controllers.portal import pager as portal_pager, get_records_pager
 from odoo.osv.expression import OR, AND
+from collections import defaultdict
+from dateutil.relativedelta import relativedelta
+from odoo import api, fields, models, _, SUPERUSER_ID
+from odoo.osv import expression
+from odoo.exceptions import UserError
+from collections import OrderedDict
+from datetime import date, datetime, timedelta
+from operator import itemgetter
+from datetime import datetime , date
+from odoo import exceptions
+from dateutil.relativedelta import relativedelta
+from odoo import http, _
+from odoo.exceptions import AccessError, MissingError
+from odoo.http import request
+from odoo.addons.portal.controllers.portal import CustomerPortal, pager as portal_pager
+from odoo.tools import groupby as groupbyelem
+from odoo.osv.expression import OR
+import base64
+import ast
+
+
+def print_site_timesheet_content(flag=0):
+    emps = request.env['hr.employee'].sudo().search([('user_id','=',http.request.env.context.get('uid'))])
+    employee_name = emps
+    return {
+        'emps': emps,
+        'employee_name': employee_name,
+        'success_flag' : flag,
+    }
+
+class CreateAttendance(http.Controller):
+    
+    @http.route('/site/timesheet/print/',type="http", website=True, auth='user')
+    def action_print_site_timesheet(self, **kw):
+        return request.render("de_timesheet_portal.print_site_timesheet_report", print_site_timesheet_content())
+    
+   
 
 
 class CustomerPortal(portal.CustomerPortal):
-
+    
+    def _show_report_portal_site(self, model, report_type, type, employee, start_date, end_date, report_ref, download=False):
+        if report_type not in ('html', 'pdf', 'text'):
+            raise UserError(_("Invalid report type: %s", report_type))
+        report_sudo = request.env.ref(report_ref).with_user(SUPERUSER_ID)
+        if not isinstance(report_sudo, type(request.env['ir.actions.report'])):
+            raise UserError(_("%s is not the reference of a report", report_ref))
+        if hasattr(model, 'company_id'):
+            report_sudo = report_sudo.with_company(model.company_id)
+        method_name = '_render_qweb_%s' % (report_type)
+        report = getattr(report_sudo, method_name)([model], data={'report_type': report_type,'employee':employee,'start_date':start_date,'type':type,'end_date':end_date})[0]
+        reporthttpheaders = [
+            ('Content-Type', 'application/pdf' if report_type == 'pdf' else 'text/html'),
+            ('Content-Length', len(report)),
+        ]
+        if report_type == 'pdf' and download:
+            filename = "%s.pdf" % (re.sub('\W+', '-', model._get_report_base_filename()))
+            reporthttpheaders.append(('Content-Disposition', content_disposition(filename)))
+        return request.make_response(report, headers=reporthttpheaders)
+    
+    
+    @http.route('/site/timesheet/print/report',type="http", website=True,download=False, auth='user')
+    def action_print_ora_site_timesheet_report(self, **kw):
+        report_type='pdf'
+        order_sudo = 'account.analytic.line'
+        download = False
+        type = kw.get('type')
+        employee = request.env['hr.employee'].sudo().search([('id','=',int(kw.get('employee_id')))])
+        start_date = kw.get('start_date')
+        end_date = kw.get('end_date')
+        return self._show_report_portal_site(model=order_sudo, report_type=report_type,type=type,employee=employee, start_date=start_date, end_date=end_date, report_ref='de_timesheet_portal.open_timesheet_report_wizard_action', download=download)
+    
+    
     def _prepare_home_portal_values(self, counters):
         values = super()._prepare_home_portal_values(counters)
         if 'timesheet_report_count' in counters:

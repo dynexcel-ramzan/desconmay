@@ -22,29 +22,45 @@ class HrTimesheetReport(models.AbstractModel):
         docs = self.env[model].browse(self.env.context.get('active_id'))
         employees = docs.employee_ids
         type = docs.type
-        date_from = docs.date_from
-        date_to =  docs.date_to
-        
+        date_from = docs.start_date
+        date_to =  docs.end_date
+        req_date_from = docs.start_date
+        req_date_to = docs.end_date
+        if not docs.employee_ids:
+            employees = data['employee_id']
+            type = data['type']
+            date_from = data['start_date']
+            date_to =  data['end_date'] 
+            req_date_from = datetime.strptime(str(data['start_date']), "%Y-%m-%d")
+            req_date_to = datetime.strptime(str(data['end_date']), "%Y-%m-%d")
         for employee in employees:
             detail_timesheet_data = []
             summary_timesheet_data =[]
+            timesheet_data = []
             tot_planned_hrs = 0
             tot_worked_hrs = 0
             tot_idle_hrs = 0
+            ora_type = 'summary'
             timesheet_lines=self.env['account.analytic.line'].sudo().search([('employee_id','=',employee.id),('line_date','>=',date_from),('line_date','<=',date_to)], order='line_date ASC')
             if type=='summary':
-                days = (date_to - date_from).days
+                days = (req_date_to - req_date_from).days
                 start_date = date_from
+                rest_day = '0'
                 general_shift = self.env['resource.calendar'].sudo().search([('shift_type','=','general')], limit=1)
-                for day in range(days):
+                for day in range(days+1):
+                    rest_day = '0'
+                    start_date = date_from + timedelta(day) 
                     day_total_worked_hrs = 0
                     daytime=self.env['account.analytic.line'].sudo().search([('employee_id','=',employee.id),('line_date','=',start_date)], order='line_date ASC')
                     for ora_time in daytime:
                         day_total_worked_hrs += ora_time.unit_amount
                     shift_planned_hrs = 0
-                    shift_schedule_line = self.env['hr.shift.schedule.line'].sudo().search([('employee_id','=',ts.employee_id.id),('date','=',line.line_date),('state','=','posted')], limit=1)
+                    shift_schedule_line = self.env['hr.shift.schedule.line'].sudo().search([('employee_id','=',employee.id),('date','=',start_date),('state','=','posted')], limit=1)
                     if not shift_schedule_line:
-                        shift_planned_hrs += general_shift.hours_per_day  
+                        shift_planned_hrs += general_shift.hours_per_day 
+                        
+                    if shift_schedule_line.rest_day==True:
+                       rest_day='1' 
                         
                     shift_planned_hrs += shift_schedule_line.first_shift_id.hours_per_day
                     if shift_schedule_line.second_shift_id:
@@ -58,12 +74,14 @@ class HrTimesheetReport(models.AbstractModel):
                     tot_idle_hrs += day_total_worked_hrs
                     summary_timesheet_data.append({
                         'date': start_date.strftime('%d-%b-%y'),
-                        'planned_hrs': shift_planned_hrs,
+                        'rest_day': rest_day,
+                        'planned_hrs': shift_planned_hrs if rest_day=='0' else  0,
                         'worked_hrs': day_total_worked_hrs,
                         'idle_hrs': diff_hrs,
                     })    
-                    start_date = date_from + timedelta(day) 
-            if type=='detail':    
+                    
+            if type=='detail':  
+                ora_type = 'detail'
                 detail_timesheet_data=timesheet_lines        
             timesheet_data.append({
                 'employee_no': employee.emp_number ,
@@ -71,14 +89,15 @@ class HrTimesheetReport(models.AbstractModel):
                 'tot_worked_hrs': tot_worked_hrs,
                 'tot_idle_hrs': tot_idle_hrs,
                 'name': employee.name,
-                'date_from': date_from,
-                'date_to': date_to,
+                'date_from': date_from.strftime('%d-%b-%y'),
+                'date_to': date_to.strftime('%d-%b-%y'),
                 'department': employee.department_id.name,
                 'manager': employee.parent_id.name,
                 'summary_timesheet_data': summary_timesheet_data,
-                'detail_timesheet_data': detail_timesheet_data,
+                'detail_timesheet_data': timesheet_lines,
             })
         return {
                 'docs': docs,
+                'type': ora_type,
                 'timesheet_data': timesheet_data,
                }
