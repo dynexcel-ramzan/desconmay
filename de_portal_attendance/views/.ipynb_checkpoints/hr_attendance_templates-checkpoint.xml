@@ -317,7 +317,7 @@
                                             <t t-set='att_tot_hrs' t-value='att_tot_hrs+att_ext.worked_hours'/>
                                         </t>   
                                         <t t-if='att_tot_hrs>=24'>
-                                            Working Hours are wrong
+                                            <p style='color:red;'>Working Hours are wrong</p>
                                         </t>
                                     </td>
 
