@@ -83,7 +83,7 @@ class CustomerPortal(portal.CustomerPortal):
         employee = request.env['hr.employee'].sudo().search([('id','=',int(kw.get('employee_id')))])
         start_date = kw.get('start_date')
         end_date = kw.get('end_date')
-        return self._show_report_portal_site(model=order_sudo, report_type=report_type,type=type,employee=employee, start_date=start_date, end_date=end_date, report_ref='de_timesheet_portal.open_timesheet_report_wizard_action', download=download)
+        return self._show_report_portal_site(model=order_sudo, report_type=report_type,type=type,employee=employee, start_date=start_date, end_date=end_date, report_ref='de_timesheet_portal.open_site_sheet_report_wizard_action', download=download)
     
     
     def _prepare_home_portal_values(self, counters):
@@ -408,7 +408,7 @@ class CustomerPortal(portal.CustomerPortal):
         time_to = datetime.strptime(kw.get('unit_amount_to'), '%H:%M')
         unit_time_from = str(time_from.hour)+'.'+ str(time_from.minute)
         unit_time_to = str(time_to.hour)+'.'+ str(time_to.minute)
-        if unit_time_from > unit_time_to:
+        if float(unit_time_from) > float(unit_time_to):
             warning_message='Out Time cannot be Less than In Time! '+ "\n"+' Time From: '+str(unit_time_from)+ "\n"+' Time To: '+str(unit_time_to)
             values = self._sheet_get_page_view_values(sheet, access_token, **kw)
             values.update({
@@ -424,7 +424,24 @@ class CustomerPortal(portal.CustomerPortal):
                 'unit_amount_to': kw.get('unit_amount_to'),
                 'date': kw.get('date'),
             })
-            return request.render('de_timesheet_portal.portal_my_timelog', values)    
+            return request.render('de_timesheet_portal.portal_my_timelog', values)  
+        if kw.get('date') > str(fields.date.today()):
+            warning_message='Not Allow to Add Timesheet for Future Date!'
+            values = self._sheet_get_page_view_values(sheet, access_token, **kw)
+            values.update({
+                'sheet': sheet,
+                'error_flag': 1,
+                'errora_message': warning_message,
+                'projects': request.env['project.project'].sudo().search([]),
+                'type_ids': request.env['hr.timesheet.type'].sudo().search([]),
+                'name': kw.get('name'),
+                'project_id_ora': int(kw.get('project_id')),
+                'task_id_ora': int(kw.get('task_id')),
+                'unit_amount_from': kw.get('unit_amount_from'),
+                'unit_amount_to': kw.get('unit_amount_to'),
+                'date': kw.get('date'),
+            })
+            return request.render('de_timesheet_portal.portal_my_timelog', values)  
         in_existing_timesheet = request.env['account.analytic.line'].sudo().search([('employee_id','=',sheet.employee_id.id),('line_date','=',kw.get('date')),('unit_amount_from','<=',unit_time_from),('unit_amount_to','>=',unit_time_from),('sheet_id.state','!=','refused')], limit=1)
         out_existing_timesheet = request.env['account.analytic.line'].sudo().search([('employee_id','=',sheet.employee_id.id),('line_date','=',kw.get('date')),('unit_amount_from','<=',unit_time_to),('unit_amount_to','>=',unit_time_to),('sheet_id.state','!=','refused')], limit=1)
         if in_existing_timesheet:

@@ -21,4 +21,4 @@ class TimesheetReportWizard(models.TransientModel):
 
     def _print_report(self, data):
         data['form'].update(self.read(['type','start_date', 'end_date','employee_ids'])[0])
-        return self.env.ref('de_timesheet_portal.open_timesheet_report_wizard_action').report_action(self, data=data, config=False)
+        return self.env.ref('de_timesheet_portal.open_site_sheet_report_wizard_action').report_action(self, data=data, config=False)

@@ -42,25 +42,24 @@
                     <td  align="center"></td>
                 </tr>
             </table>
-             <t t-if='type=="summary"'>
                  <h5>Total Summary</h5>
                  <table class="table table-sm">
                         <tr style="height:30%">
                             <th  align="center">Planned Hours</th>
                             <td  align="center">
-                                <span t-esc="round(employee_timesheet['tot_planned_hrs'],2)"/>
+                                <span t-esc="round(employee_timesheet['tot_planned_hrs'],2)" t-options='{"widget": "float_time"}'/>
                             </td>
                             <th  align="center">Worked Hours</th>
                             <td  align="center">
-                                <span t-esc="round(employee_timesheet['tot_worked_hrs'],2)"/>
+                                <span t-esc="round(employee_timesheet['tot_worked_hrs'],2)" t-options='{"widget": "float_time"}'/>
                             </td>
                             <th  align="center">Idle Hours</th>
                             <td  align="center">
-                                <span t-esc="round(employee_timesheet['tot_idle_hrs'],2)"/>
+                                <span t-esc="round(employee_timesheet['tot_idle_hrs'],2)" t-options='{"widget": "float_time"}'/>
                             </td>
                         </tr>
                  </table>
-             </t> 
+            
             
             <br/>
             <t t-if='type=="summary"'>
@@ -113,53 +112,60 @@
                             <th>START TIME</th>
                             <th>END TIME</th>
                             <th>DURATION</th>
+                            <th>STATUS</th>
                             <th>REMARKS</th>
                         </tr>
                     </thead>
                         <tbody class="detail_tbody">
                             <t t-set='ora_line_date' t-value='0'/>
-                            <t t-set='is_rest_day' t-value='0'/>
                             <t t-set='ora_detail_date' t-value='date_from'/>
                             <t t-foreach="employee_timesheet['detail_timesheet_data']" t-as="detail_timesheet">
+                                <t t-set='is_rest_day' t-value='0'/>
+                                <t t-set='current_shift' t-value='0'/>
                                 <t t-set='total_planned_hrs' t-value='0'/>
                                 <t t-set='total_worked_hrs' t-value='0'/>
                                 <t t-set='total_idle_hrs' t-value='0'/>
+                                
                                 <t t-if='ora_line_date!=detail_timesheet.line_date'>
-                                    <t t-foreach="request.env['hr.shift.schedule.line'].sudo().search([('employee_id','=',detail_timesheet.employee_id.id),('date','=',ora_detail_date),('state','=','posted')])" t-as="shift_line">
+                                    <t t-foreach="request.env['hr.shift.schedule.line'].sudo().search([('employee_id','=',detail_timesheet.employee_id.id),('date','=',detail_timesheet.line_date),('state','=','posted')])" t-as="shift_line">
                                         <t t-set='total_planned_hrs' t-value='total_planned_hrs+shift_line.first_shift_id.hours_per_day'/>
-                                        <t t-set='total_planned_hrs' t-value='total_planned_hrs+shift_line.second_shift_id.hours_per_day'/>
-                                        <t t-if='shift_line.rest_day==True'>
-                                            <t t-set='is_rest_day' t-value='1'/>
-                                        </t>    
-                                    </t> 
+                                        <t t-set='total_planned_hrs' t-value='total_planned_hrs+shift_line.second_shift_id.hours_per_day'/>   
+                                    </t>
                                     <t t-if='total_planned_hrs==0'>
                                         <t t-foreach="request.env['resource.calendar'].sudo().search([('shift_type','=','general')])" t-as="sft_type">
                                         <t t-set='total_planned_hrs' t-value='total_planned_hrs+sft_type.hours_per_day'/>
-                                       
-                                    </t> 
+                                           
+                                    </t>    
                                     </t>
-                                    
-                                    
-                                    <t t-set='total_worked_hrs' t-value='total_worked_hrs + detail_timesheet.unit_amount'/>
-                                    
+                                    <t t-foreach="request.env['account.analytic.line'].sudo().search([('employee_id','=', detail_timesheet.employee_id.id),('line_date','=',detail_timesheet.line_date)])" t-as="mv_type">
+                                       <t t-set='total_worked_hrs' t-value='total_worked_hrs + mv_type.unit_amount'/>
+                                    </t>
                                 </t> 
                                 
-                                <t t-if='ora_line_date!=0'>
+                                
                                 <t t-if='ora_line_date!=detail_timesheet.line_date'>
                                     <tr style='color:blue;'>
                                         <th>Date</th>
                                         <th></th>
                                         <th></th>
+                                        
                                         <th>Planned Hrs</th>
                                         <th>Worked Hrs</th>
                                         <th>Idle Hrs</th>
+                                        <th></th>
                                         <th>Remarks</th>
                                     </tr>
                                     <tr style='color:blue;'>
-                                        <td ><span t-if='ora_line_date!=0' t-esc='ora_line_date.strftime("%d-%b-%y")'/></td>
-                                        <td ></td>
-                                        <td ></td>
-                                        <td ><span t-esc="round(total_planned_hrs,2)" t-options='{"widget": "float_time"}'/></td>
+                                        <td ><span  t-esc='detail_timesheet.line_date.strftime("%d-%b-%y")'/></td>
+                                        <t t-foreach="request.env['account.analytic.line'].sudo().search([('employee_id','=', detail_timesheet.employee_id.id),('rest_day','=',True),('line_date','=',detail_timesheet.line_date)])" t-as="mv_type">
+                                        <t t-set='total_planned_hrs' t-value='0'/>
+                                        <t t-set='is_rest_day' t-value='1'/>    
+                                    </t> 
+                                        <td></td>
+                                        <td></td>
+                                        
+                                        <td>
+                                            <span t-esc="round(total_planned_hrs,2)" t-options='{"widget": "float_time"}'/></td>
                                         <td ><span t-esc="round(total_worked_hrs,2)" t-options='{"widget": "float_time"}'/></td>
                                         <td >
                                             <t t-if='(total_planned_hrs-total_worked_hrs)>0'>
@@ -169,6 +175,7 @@
                                                 <span t-esc="0" />
                                             </t>
                                         </td>
+                                         <td></td>  
                                          <t t-if="is_rest_day==1">
                                             <td style='background-color:LightGreen;'>
                                                 Rest Day
@@ -181,7 +188,7 @@
                                     </t>
                                        </tr>
                                 </t>
-                                </t>    
+                                 
                                 
                                 <t t-set='ora_line_date' t-value='detail_timesheet.line_date'/>
                                 
@@ -194,6 +201,7 @@
                                     <td ><span t-esc="detail_timesheet.unit_amount_from" t-options='{"widget": "float_time"}'/></td>
                                     <td ><span t-esc="detail_timesheet.unit_amount_to" t-options='{"widget": "float_time"}'/></td>
                                     <td ><span t-esc="detail_timesheet.unit_amount" t-options='{"widget": "float_time"}'/></td>
+                                    <td ><span t-esc="detail_timesheet.sheet_id.state" /></td>
                                     <td ><span t-esc="detail_timesheet.name" /></td>
                                 </tr>
                                 

@@ -6,7 +6,7 @@ from odoo import api, fields, models, _
 from odoo.exceptions import UserError, ValidationError
 from odoo.tools import email_split, float_is_zero, float_repr
 from odoo.tools.misc import clean_context, format_date
-
+from dateutil.relativedelta import relativedelta
 
 class HRTimesheetSheetType(models.Model):
     _name = 'hr.timesheet.sheet.type'
@@ -134,6 +134,7 @@ class HRTimesheetSheet(models.Model):
             date_passed = 0
             general_shift = self.env['resource.calendar'].sudo().search([('shift_type','=','general')], limit=1)
             for line in ts.timesheet_line_ids.sorted(key=lambda r: r.line_date):
+                rest_day = '0'
                 if str(date_passed)!=str(line.line_date):
                     date_passed=line.line_date
                     shift_schedule_line = self.env['hr.shift.schedule.line'].sudo().search([('employee_id','=',ts.employee_id.id),('date','=',line.line_date),('state','=','posted')], limit=1)
@@ -141,9 +142,26 @@ class HRTimesheetSheet(models.Model):
                         pln_hrs += general_shift.hours_per_day  
                         
                     pln_hrs += shift_schedule_line.first_shift_id.hours_per_day
+                    if shift_schedule_line.rest_day==True:
+                        rest_day = '1'    
+                    if shift_schedule_line:
+                        if shift_schedule_line.first_shift_id:
+                            general_shift = shift_schedule_line.first_shift_id
+                        else:
+                            general_shift = shift_schedule_line.second_shift_id
                     if shift_schedule_line.second_shift_id:
                         pln_hrs += shift_schedule_line.second_shift_id.hours_per_day                               
                 tot_hrs += line.unit_amount
+                
+                for gazetted_day in general_shift.global_leave_ids:
+                    gazetted_date_from = gazetted_day.date_from +relativedelta(hours=+5)
+                    gazetted_date_to = gazetted_day.date_to +relativedelta(hours=+5)
+                    if str(line.line_date.strftime('%y-%m-%d')) >= str(gazetted_date_from.strftime('%y-%m-%d')) and str(line.line_date.strftime('%y-%m-%d')) <= str(gazetted_date_to.strftime('%y-%m-%d')): 
+                        rest_day = '1'
+                if rest_day=='1':        
+                    line.update({
+                        'rest_day':  True
+                    })
             if pln_hrs < 0:
                 pln_hrs = 0
             if tot_hrs < 0:
@@ -228,6 +246,7 @@ class HRTimesheet(models.Model):
     unit_amount_to = fields.Float('Time To', default=0.0)
     line_date = fields.Date(string='Line Date')
     ora_date = fields.Date(string='ORA Date')
+    rest_day = fields.Boolean(string='Rest Day')
 
     
     @api.constrains('timesheet_type_id')
