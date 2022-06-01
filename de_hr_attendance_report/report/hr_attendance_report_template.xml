@@ -90,12 +90,11 @@
                                    </td>
                                 </t>
                                 <t t-if="attendance['holiday']!='1'">
-                                  <t t-if="attendance['absent']=='1'">   
-                                    <td style="background-color:red;">
+                                   <t t-if="attendance['absent']=='1'">   
+                                     <td style="background-color:red;">
                                         <span t-esc="attendance['remarks']"/>
-                                    </td>
-                                      
-                                  </t>
+                                     </td>  
+                                   </t>
                                 </t>
                                 <t t-if="attendance['holiday']!='1'">
                                   <t t-if="attendance['absent']!='1'">   

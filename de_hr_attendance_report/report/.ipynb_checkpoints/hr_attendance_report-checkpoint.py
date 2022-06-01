@@ -191,8 +191,8 @@ class HrAttendanceReport(models.AbstractModel):
                     present = 'P'
                 if  working_hours >= 24:
                     remarks = 'Working Hours are wrong' 
-                    present = ' '
-                 
+                    present = 'E'
+                    absent = '1'
                 attendances.append({
                     'date': start_date.strftime('%d/%b/%Y'),
                     'day':  start_date.strftime('%A'),
@@ -419,7 +419,8 @@ class PortalAttendanceReport(models.AbstractModel):
                     present = 'P'
                 if  working_hours >= 24:
                     remarks = 'Working Hours are wrong' 
-                    present = ' '            
+                    present = 'E'
+                    absent = '1'            
                 attendances.append({
                     'date': start_date.strftime('%d/%b/%Y'),
                     'day':  start_date.strftime('%A'),
