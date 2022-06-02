@@ -18,7 +18,7 @@ class HrTimesheetReport(models.AbstractModel):
     
     def _get_report_values(self, docids, data=None):
         model = self.env.context.get('active_model')
-        docs = self.env[model].browse(self.env.context.get('active_id'))
+        docs = self.env['timesheet.report.wizard'].browse(self.env.context.get('active_id'))
         employees = docs.employee_ids
         type = docs.type
         date_from = docs.start_date
@@ -26,12 +26,13 @@ class HrTimesheetReport(models.AbstractModel):
         req_date_from = docs.start_date
         req_date_to = docs.end_date
         if not docs.employee_ids:
-            employees = data['employee_id']
-            type = data['type']
+            employees = data['employee']
+            type = data['ora_type']
             date_from = data['start_date']
             date_to =  data['end_date'] 
             req_date_from = datetime.strptime(str(data['start_date']), "%Y-%m-%d")
             req_date_to = datetime.strptime(str(data['end_date']), "%Y-%m-%d")
+        ora_type = type   
         for employee in employees:
             detail_timesheet_data = []
             summary_timesheet_data =[]
@@ -39,16 +40,16 @@ class HrTimesheetReport(models.AbstractModel):
             tot_planned_hrs = 0
             tot_worked_hrs = 0
             tot_idle_hrs = 0
-            ora_type = 'summary'
+            
             timesheet_lines=self.env['account.analytic.line'].sudo().search([('employee_id','=',employee.id),('line_date','>=',date_from),('line_date','<=',date_to),('sheet_id.state','!=','refused')], order='line_date ASC')
             #if type=='summary':
             days = (req_date_to - req_date_from).days
-            start_date = date_from
+            start_date = req_date_from
             rest_day = '0'
             general_shift = self.env['resource.calendar'].sudo().search([('shift_type','=','general')], limit=1)
             for day in range(days+1):
                 rest_day = '0'
-                start_date = date_from + timedelta(day) 
+                start_date = req_date_from + timedelta(day) 
                 day_total_worked_hrs = 0
                 daytime=self.env['account.analytic.line'].sudo().search([('employee_id','=',employee.id),('line_date','=',start_date),('sheet_id.state','!=','refused')])
                 for ora_time in daytime:
@@ -96,8 +97,8 @@ class HrTimesheetReport(models.AbstractModel):
                 'tot_worked_hrs': tot_worked_hrs,
                 'tot_idle_hrs': tot_idle_hrs,
                 'name': employee.name,
-                'date_from': date_from.strftime('%d-%b-%y'),
-                'date_to': date_to.strftime('%d-%b-%y'),
+                'date_from': req_date_from.strftime('%d-%b-%y'),
+                'date_to': req_date_to.strftime('%d-%b-%y'),
                 'department': employee.department_id.name,
                 'manager': employee.parent_id.name,
                 'summary_timesheet_data': summary_timesheet_data,

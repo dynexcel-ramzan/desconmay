@@ -22,6 +22,7 @@
     # any module necessary for this one to work correctly
     'depends': ['hr_timesheet','portal','analytic','approvals','de_employee_shift','resource',
         'web',
+        'de_hr_attendance_report',        
         'rating',        
         'web_tour',
         'digest',
