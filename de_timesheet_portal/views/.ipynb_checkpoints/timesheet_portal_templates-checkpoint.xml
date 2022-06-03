@@ -252,8 +252,8 @@
                         <th>Request Date</th>
                         <th>Employee</th>
                         <th class="text-right">Planned Hours</th>
-                        <th class="text-right">Total Hours</th>
-                        <th class="text-right">Idle Diff.</th>
+                        <th class="text-right">Total Work Hrs</th>
+                        <th class="text-right">Idle Hrs</th>
                         <th>Status</th>
                         <th></th>
                         <th></th>
@@ -547,20 +547,6 @@
 							</div>
                              <div class="row mt8">
                                 <div class="col-sm-2">
-                                    <label for="date_from" class="control-label"><strong>Start Time:</strong></label>
-								</div>
-                                <div class="col-sm-4">
-                                    <input type="time"  id="unit_amount_from" name="unit_amount_from" class="form-control" required="1"  t-options='{"widget": "float_time"}' t-att-value="unit_amount_from" />
-                                </div>
-                                <div class="col-sm-2">
-                                    <label for="date_from" class="control-label"><strong>End Time:</strong></label>
-                                </div>
-                                <div class="col-sm-4">
-                                    <input type="time" id="unit_amount_to" name="unit_amount_to" class="form-control" required="1" t-options='{"widget": "float_time"}' t-att-value="unit_amount_to" />
-                                </div>
-                            </div>
-                            <div class="row mt8">
-                                <div class="col-sm-2">
                                     <label for="date" class="control-label"><strong>Date:</strong></label>
 								</div>
                                 <div class="col-sm-4">
@@ -573,6 +559,22 @@
 									<input type="text" id="name" name="name" class="form-control" required="1" t-att-value="name"/>
 								</div>
                             </div>
+                            
+                             <div class="row mt8">
+                                <div class="col-sm-2">
+                                    <label for="date_from" class="control-label"><strong>Start Time:</strong></label>
+								</div>
+                                <div class="col-sm-4">
+                                    <input type="time"  id="unit_amount_from" name="unit_amount_from" class="form-control" required="1"  t-options='{"widget": "float_time"}' t-att-value="unit_amount_from" />
+                                </div>
+                                <div class="col-sm-2">
+                                    <label for="date_from" class="control-label"><strong>End Time:</strong></label>
+                                </div>
+                                <div class="col-sm-4">
+                                    <input type="time" id="unit_amount_to" name="unit_amount_to" class="form-control" required="1" t-options='{"widget": "float_time"}' t-att-value="unit_amount_to" />
+                                </div>
+                            </div>
+                           
                            
                         </div>
                         <div class="modal-footer">                            
@@ -591,12 +593,12 @@
                 <th>Description</th>
                 <th>From</th>
                 <th>To</th>
-                <th>Duration (Days)</th>
+                <th>Duration (Hrs)</th>
                 <th></th>  
               </tr>
             </thead>
             <tr t-foreach="sheet.timesheet_line_ids" t-as="timesheet">
-                <td><t t-esc="timesheet.line_date" /></td>
+                <td><t t-esc="timesheet.line_date"  t-options='{"widget": "date"}'/></td>
                 <td><t t-esc="timesheet.project_id.name"/></td>
                 <td><t t-esc="timesheet.task_id.name"/></td>
                 <td><t t-esc="timesheet.name"/></td>
